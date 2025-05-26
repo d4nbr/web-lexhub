@@ -110,11 +110,6 @@ export function Profile() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="ghost" className="rounded cursor-pointer">
-                Cancelar
-              </Button>
-            </DialogClose>
             <Button
               variant="destructive"
               className="rounded cursor-pointer"
@@ -124,7 +119,7 @@ export function Profile() {
               {!isLoggingOut ? (
                 <>
                   <LogOut className="size-4" />
-                  Sair da Conta
+                  Sair da conta
                 </>
               ) : (
                 <div className="flex items-center gap-2">

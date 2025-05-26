@@ -59,16 +59,11 @@ export function FinishedService({
       <DialogHeader>
         <DialogTitle>Concluir Atendimento</DialogTitle>
         <DialogDescription>
-          O atendimento será finalizado. Deseja continuar?
+          O atendimento será concluído. Deseja continuar?
         </DialogDescription>
       </DialogHeader>
 
       <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="ghost" className="rounded cursor-pointer">
-            Cancelar
-          </Button>
-        </DialogClose>
         <Button
           className="rounded cursor-pointer bg-emerald-700 hover:bg-emerald-600 text-white"
           disabled={isFinishing}
@@ -77,7 +72,7 @@ export function FinishedService({
           {!isFinishing ? (
             <>
               <CheckCircle className="size-4" />
-              Concluir Atendimento
+              Concluir
             </>
           ) : (
             <div className="flex items-center gap-2">

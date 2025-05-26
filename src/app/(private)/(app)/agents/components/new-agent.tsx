@@ -109,7 +109,7 @@ export function NewAgent() {
       </SheetTrigger>
 
       <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto px-4 w-full">
-        <SheetHeader className="mt-4">
+        <SheetHeader className="mt-2">
           <SheetTitle className="font-calsans text-2xl">
             Novo Funcionário
           </SheetTitle>
@@ -123,7 +123,7 @@ export function NewAgent() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleNewAgent)}
-            className="space-y-6 pt-2"
+            className="space-y-6 pt-4"
           >
             <FormField
               control={form.control}
@@ -194,18 +194,7 @@ export function NewAgent() {
               )}
             />
 
-            <Separator orientation="horizontal" />
-
             <SheetFooter className="flex items-center justify-end mt-8 flex-row gap-2 p-0">
-              <SheetClose asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="cursor-pointer rounded"
-                >
-                  Cancelar
-                </Button>
-              </SheetClose>
               <Button
                 type="submit"
                 disabled={isCreating}

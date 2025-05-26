@@ -246,7 +246,7 @@ export function NewService() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md md:max-w-lg overflow-y-auto px-4 rounded">
-        <DialogHeader className="mt-4">
+        <DialogHeader>
           <DialogTitle className="font-calsans text-2xl">
             Novo Atendimento
           </DialogTitle>
@@ -286,8 +286,8 @@ export function NewService() {
             />
 
             {isNameResponse && (
-              <Alert className="rounded bg-emerald-600 p-1">
-                <AlertTitle className="flex items-center justify-center gap-1 text-black">
+              <Alert className="rounded bg-emerald-600/50 p-2">
+                <AlertTitle className="flex items-center justify-center gap-1">
                   <CheckCircle className="size-4" />
                   {formatFullName(isNameResponse)}
                 </AlertTitle>
@@ -390,7 +390,7 @@ export function NewService() {
                             <Button
                               variant="outline"
                               className={cn(
-                                'w-full justify-between',
+                                'w-full justify-between rounded',
                                 !field.value.length && 'text-muted-foreground'
                               )}
                             >
@@ -402,16 +402,17 @@ export function NewService() {
                           </FormControl>
                         </DialogTrigger>
 
-                        <DialogContent className="p-0 w-[90%] rounded">
-                          <DialogHeader>
-                            <DialogTitle className="sr-only">
-                              Selecionar Tipo de Serviço
-                            </DialogTitle>
-                          </DialogHeader>
+                        <DialogContent className="w-full  py-2 px-0 rounded">
+                          <DialogTitle className="sr-only">
+                            Selecionar Tipo de Serviço
+                          </DialogTitle>
 
                           <Command>
-                            <CommandInput placeholder="Buscar tipo de serviço..." />
-                            <CommandList className="max-h-64 overflow-y-auto">
+                            <CommandInput
+                              placeholder="Buscar tipo de serviço..."
+                              className="max-h-64 overflow-y-auto"
+                            />
+                            <CommandList className="rounded">
                               <CommandEmpty>
                                 Nenhum serviço encontrado.
                               </CommandEmpty>
@@ -471,11 +472,6 @@ export function NewService() {
                 />
 
                 <DialogFooter className="flex items-center justify-end mt-8 flex-row gap-2 p-0">
-                  <DialogClose asChild>
-                    <Button type="button" variant="ghost">
-                      Cancelar
-                    </Button>
-                  </DialogClose>
                   <Button
                     type="submit"
                     disabled={isCreating}

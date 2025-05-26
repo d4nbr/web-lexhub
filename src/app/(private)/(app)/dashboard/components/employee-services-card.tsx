@@ -81,7 +81,6 @@ export function EmployeeServicesCard({
           </div>
         )}
 
-
         <div className="flex items-center justify-end flex-wrap gap-10">
           <div>
             {isTotalByAgentLoading ? (
@@ -103,7 +102,7 @@ export function EmployeeServicesCard({
                   })}
                 </span>
                 <span
-                  className={`text-xs ml-2 ${variationMonth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                  className={`text-xs ml-2 ${variationMonth >= 0 ? 'text-emerald-500' : 'text-red-400'}`}
                 >
                   {variationMonth >= 0 ? '+' : ''}
                   {variationMonth.toFixed(1)}%

@@ -62,11 +62,6 @@ export function CancelService({ services, onOpenChange }: CancelServiceProps) {
       </DialogHeader>
 
       <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="ghost" className="rounded cursor-pointer">
-            Cancelar
-          </Button>
-        </DialogClose>
         <Button
           variant="destructive"
           className="rounded cursor-pointer text-white"
@@ -76,7 +71,7 @@ export function CancelService({ services, onOpenChange }: CancelServiceProps) {
           {!isCancelling ? (
             <>
               <XCircle className="size-4" />
-              Cancelar Atendimento
+              Cancelar
             </>
           ) : (
             <div className="flex items-center gap-2">

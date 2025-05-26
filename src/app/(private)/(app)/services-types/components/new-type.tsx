@@ -43,6 +43,7 @@ export function NewServiceType() {
   const [sheetIsOpen, setSheetIsOpen] = useState(false)
 
   const form = useForm<NewServiceTypeFormType>({
+    shouldUnregister: true, // Desregistrar o campo do formulário
     resolver: zodResolver(newServiceTypeFormSchema),
     defaultValues: {
       name: '',
@@ -101,7 +102,7 @@ export function NewServiceType() {
       </SheetTrigger>
 
       <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto px-4 w-full">
-        <SheetHeader className="mt-4">
+        <SheetHeader className="mt-2">
           <SheetTitle className="font-calsans text-2xl">
             Novo Serviço
           </SheetTitle>
@@ -115,7 +116,7 @@ export function NewServiceType() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleCreateServiceType)}
-            className="space-y-6 pt-2"
+            className="space-y-6 pt-4"
           >
             <FormField
               control={form.control}
@@ -140,18 +141,7 @@ export function NewServiceType() {
               )}
             />
 
-            <Separator orientation="horizontal" />
-
             <SheetFooter className="flex items-center mt-8 justify-end flex-row gap-2 p-0">
-              <SheetClose asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="cursor-pointer rounded"
-                >
-                  Cancelar
-                </Button>
-              </SheetClose>
               <Button
                 type="submit"
                 disabled={isCreating}

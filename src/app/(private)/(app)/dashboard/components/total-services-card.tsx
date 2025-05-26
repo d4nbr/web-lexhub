@@ -55,9 +55,7 @@ export function TotalServicesCard() {
             {isLoadingDay ? (
               <Skeleton className="h-3 w-10 rounded-full mt-2" />
             ) : (
-              <p className="text-sm font-medium text-white">
-                Hoje
-              </p>
+              <p className="text-sm font-medium text-white">Hoje</p>
             )}
 
             {isLoadingDay ? (
@@ -71,7 +69,7 @@ export function TotalServicesCard() {
                   })}
                 </span>
                 <span
-                  className={`text-xs ml-2 ${variationDay >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                  className={`text-xs ml-2 ${variationDay >= 0 ? 'text-emerald-500' : 'text-red-400'}`}
                 >
                   {variationDay >= 0 ? '+' : ''}
                   {variationDay.toFixed(1)}%
@@ -84,9 +82,7 @@ export function TotalServicesCard() {
             {isLoadingDay ? (
               <Skeleton className="h-3 w-14 rounded-full mt-2" />
             ) : (
-              <p className="text-sm font-medium text-muted-foreground">
-                Ontem
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Ontem</p>
             )}
 
             {isLoadingDay ? (

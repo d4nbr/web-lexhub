@@ -161,7 +161,7 @@ export function NewServiceExternal() {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md md:max-w-lg overflow-y-auto px-4 rounded">
-        <DialogHeader className="mt-4">
+        <DialogHeader className="mt-2">
           <DialogTitle className="font-calsans text-2xl">
             Novo Atendimento Externo
           </DialogTitle>
@@ -246,8 +246,9 @@ export function NewServiceExternal() {
               render={({ field }) => (
                 <FormItem className="flex flex-col w-full">
                   <FormLabel>Tipo de Serviço</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
                       <FormControl className="rounded hover:bg-transparent">
                         <Button
                           variant="outline"
@@ -262,13 +263,17 @@ export function NewServiceExternal() {
                           <ChevronsUpDown className="ml-2 size-4 rounded shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
-                    </PopoverTrigger>
+                    </DialogTrigger>
 
-                    <PopoverContent className="w-full p-0 rounded">
+                    <DialogContent className="w-full py-2 px-0 rounded">
+                      <DialogTitle className="sr-only">
+                        Selecionar os tipos de serviços
+                      </DialogTitle>
+
                       <Command>
                         <CommandInput
                           placeholder="Buscar tipo de serviço..."
-                          className="h-9 w-full"
+                          className="max-h-64 overflow-y-auto"
                         />
                         <CommandList className="rounded">
                           <CommandEmpty>
@@ -308,8 +313,8 @@ export function NewServiceExternal() {
                           </CommandGroup>
                         </CommandList>
                       </Command>
-                    </PopoverContent>
-                  </Popover>
+                    </DialogContent>
+                  </Dialog>
                 </FormItem>
               )}
             />
@@ -333,11 +338,6 @@ export function NewServiceExternal() {
             />
 
             <DialogFooter className="flex items-center justify-end mt-8 flex-row gap-2 p-0">
-              <DialogClose asChild>
-                <Button type="button" variant="ghost">
-                  Cancelar
-                </Button>
-              </DialogClose>
               <Button
                 type="submit"
                 disabled={isCreating}
