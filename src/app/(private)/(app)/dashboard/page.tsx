@@ -1,32 +1,190 @@
-import { Separator } from '@/components/ui/separator'
-import { AnnualServicesCard } from './components/annual-services-card'
-import { EmployeeServicesCard } from './components/employee-services-card'
-import { MonthlyServicesCard } from './components/monthly-services-card'
-import { ServiceChart } from './components/service-chart'
-import { TotalServicesCard } from './components/total-services-card'
-import { getIsAgentAuthenticated } from '@/auth'
+'use client'
 
-export default async function DashboardPage() {
-  const idAgentAuthenticated = await getIsAgentAuthenticated()
+import { useEffect, useMemo } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { DashboardFilters } from './components/dashboard-filters'
+import { OverviewCards } from './components/overview-cards'
+import { ServicesTimeSeriesChart } from './components/services-timeseries-chart'
+import { TopAgentsChart } from './components/top-agents-chart'
+import { ServiceTypeDonutChart } from './components/service-type-donut-chart'
+import { getAllActiveAgents } from '@/api/agents/get-all-active'
+import { getAnalyticsOverview } from '@/api/dashboard/get-analytics-overview'
+import { getAnalyticsTimeseries } from '@/api/dashboard/get-analytics-timeseries'
+import { getTopAgents } from '@/api/dashboard/get-top-agents'
+import { getByServiceType } from '@/api/dashboard/get-by-service-type'
+
+const TABS = [
+  { key: 'overview', label: 'Visão Geral' },
+  { key: 'employee', label: 'Por Funcionário' },
+  { key: 'comparative', label: 'Comparativos' },
+] as const
+
+type TabKey = (typeof TABS)[number]['key']
+
+export default function DashboardPage() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const today = new Date()
+  const year = Number(searchParams.get('year') ?? today.getFullYear())
+  const month = Number(searchParams.get('month') ?? today.getMonth() + 1)
+  const agentId = searchParams.get('agentId') ?? 'all'
+  const tab = (searchParams.get('tab') ?? 'overview') as TabKey
+
+  const filters = useMemo(() => ({ year, month, agentId }), [year, month, agentId])
+
+  const updateSearchParam = (changes: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    for (const [key, value] of Object.entries(changes)) {
+      params.set(key, value)
+    }
+
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
+  const activeAgentsQuery = useQuery({
+    queryKey: ['agents', 'all-active'],
+    queryFn: getAllActiveAgents,
+  })
+
+  const overviewQuery = useQuery({
+    queryKey: ['dashboard', 'overview', filters],
+    queryFn: () => getAnalyticsOverview(filters),
+  })
+
+  const timeseriesQuery = useQuery({
+    queryKey: ['dashboard', 'timeseries', { ...filters, groupBy: 'day' }],
+    queryFn: () => getAnalyticsTimeseries({ ...filters, groupBy: 'day' }),
+  })
+
+  const monthlyTimeseriesQuery = useQuery({
+    queryKey: ['dashboard', 'timeseries', { ...filters, groupBy: 'month' }],
+    queryFn: () => getAnalyticsTimeseries({ ...filters, groupBy: 'month' }),
+  })
+
+  const topAgentsQuery = useQuery({
+    queryKey: ['dashboard', 'top-agents', { year, month }],
+    queryFn: () => getTopAgents({ year, month, limit: 10 }),
+    enabled: agentId === 'all',
+  })
+
+  const byServiceTypeQuery = useQuery({
+    queryKey: ['dashboard', 'by-service-type', filters],
+    queryFn: () => getByServiceType(filters),
+  })
+
+  const hasError =
+    overviewQuery.isError ||
+    timeseriesQuery.isError ||
+    byServiceTypeQuery.isError ||
+    topAgentsQuery.isError ||
+    monthlyTimeseriesQuery.isError
+
+  useEffect(() => {
+    if (!hasError) {
+      return
+    }
+
+    toast.error('Falha ao carregar analytics do dashboard.', {
+      action: {
+        label: 'Tentar novamente',
+        onClick: () => {
+          overviewQuery.refetch()
+          timeseriesQuery.refetch()
+          byServiceTypeQuery.refetch()
+          topAgentsQuery.refetch()
+          monthlyTimeseriesQuery.refetch()
+        },
+      },
+    })
+  }, [hasError])
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl font-calsans font-bold tracking-tight">
-        Dashboard
-      </h1>
+      <h1 className="text-3xl font-calsans font-bold tracking-tight">Dashboard Analytics</h1>
 
       <Separator orientation="horizontal" />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <EmployeeServicesCard idAgentAuthenticated={idAgentAuthenticated} />
-        <TotalServicesCard />
-        <MonthlyServicesCard />
-        <AnnualServicesCard />
+      <div className="flex flex-wrap gap-2">
+        {TABS.map(item => (
+          <Button
+            key={item.key}
+            variant={tab === item.key ? 'default' : 'outline'}
+            className={tab === item.key ? '' : 'border-slate-700 text-slate-200'}
+            onClick={() => updateSearchParam({ tab: item.key })}
+          >
+            {item.label}
+          </Button>
+        ))}
       </div>
 
-      <div className="grid grid-cols-9 gap-4">
-        <ServiceChart />
-      </div>
+      <DashboardFilters
+        year={year}
+        month={month}
+        agentId={agentId}
+        agents={activeAgentsQuery.data ?? []}
+        onChangeMonth={value => updateSearchParam({ month: String(value) })}
+        onChangeYear={value => updateSearchParam({ year: String(value) })}
+        onChangeAgent={value => updateSearchParam({ agentId: value })}
+      />
+
+      {(tab === 'overview' || tab === 'employee') && (
+        <OverviewCards data={overviewQuery.data} isLoading={overviewQuery.isLoading} />
+      )}
+
+      {tab === 'overview' && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <ServicesTimeSeriesChart
+            data={timeseriesQuery.data ?? []}
+            isLoading={timeseriesQuery.isLoading}
+            title="Evolução diária no mês"
+          />
+          <ServiceTypeDonutChart
+            data={byServiceTypeQuery.data ?? []}
+            isLoading={byServiceTypeQuery.isLoading}
+          />
+          {agentId === 'all' && (
+            <div className="xl:col-span-2">
+              <TopAgentsChart data={topAgentsQuery.data ?? []} isLoading={topAgentsQuery.isLoading} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'employee' && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <ServicesTimeSeriesChart
+            data={timeseriesQuery.data ?? []}
+            isLoading={timeseriesQuery.isLoading}
+            title={agentId === 'all' ? 'Evolução diária (todos)' : 'Evolução diária (funcionário)'}
+          />
+          <ServiceTypeDonutChart
+            data={byServiceTypeQuery.data ?? []}
+            isLoading={byServiceTypeQuery.isLoading}
+          />
+        </div>
+      )}
+
+      {tab === 'comparative' && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <ServicesTimeSeriesChart
+            data={timeseriesQuery.data ?? []}
+            isLoading={timeseriesQuery.isLoading}
+            title="Comparativo diário"
+          />
+          <ServicesTimeSeriesChart
+            data={monthlyTimeseriesQuery.data ?? []}
+            isLoading={monthlyTimeseriesQuery.isLoading}
+            title="Comparativo mensal"
+          />
+        </div>
+      )}
     </div>
   )
 }
