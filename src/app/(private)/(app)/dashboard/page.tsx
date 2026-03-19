@@ -30,13 +30,22 @@ export default function DashboardPage() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const today = new Date()
-  const year = Number(searchParams.get('year') ?? today.getFullYear())
-  const month = Number(searchParams.get('month') ?? today.getMonth() + 1)
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+  const yearParam = searchParams.get('year')
+  const monthParam = searchParams.get('month')
+  const year = Number(yearParam ?? currentYear)
+  const month = Number(monthParam ?? currentMonth)
   const agentId = searchParams.get('agentId') ?? 'all'
   const tab = (searchParams.get('tab') ?? 'overview') as TabKey
 
-  const filters = useMemo(() => ({ year, month, agentId }), [year, month, agentId])
+  const effectiveAgentId = tab === 'overview' ? 'all' : agentId
+
+  const filters = useMemo(
+    () => ({ year, month, agentId: effectiveAgentId }),
+    [year, month, effectiveAgentId]
+  )
 
   const updateSearchParam = (changes: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -71,7 +80,7 @@ export default function DashboardPage() {
   const topAgentsQuery = useQuery({
     queryKey: ['dashboard', 'top-agents', { year, month }],
     queryFn: () => getTopAgents({ year, month, limit: 10 }),
-    enabled: agentId === 'all',
+    enabled: effectiveAgentId === 'all',
   })
 
   const byServiceTypeQuery = useQuery({
@@ -85,6 +94,42 @@ export default function DashboardPage() {
     byServiceTypeQuery.isError ||
     topAgentsQuery.isError ||
     monthlyTimeseriesQuery.isError
+
+  useEffect(() => {
+    const shouldSetDefaults = !yearParam || !monthParam
+
+    if (!shouldSetDefaults) {
+      return
+    }
+
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (!yearParam) {
+      params.set('year', String(currentYear))
+    }
+
+    if (!monthParam) {
+      params.set('month', String(currentMonth))
+    }
+
+    if (!params.get('tab')) {
+      params.set('tab', 'overview')
+    }
+
+    if (!params.get('agentId')) {
+      params.set('agentId', 'all')
+    }
+
+    router.replace(`${pathname}?${params.toString()}`)
+  }, [monthParam, yearParam, pathname, router, searchParams, currentYear, currentMonth])
+
+  useEffect(() => {
+    if (tab !== 'overview' || agentId === 'all') {
+      return
+    }
+
+    updateSearchParam({ agentId: 'all' })
+  }, [tab, agentId])
 
   useEffect(() => {
     if (!hasError) {
@@ -117,7 +162,12 @@ export default function DashboardPage() {
             key={item.key}
             variant={tab === item.key ? 'default' : 'outline'}
             className={tab === item.key ? '' : 'border-slate-700 text-slate-200'}
-            onClick={() => updateSearchParam({ tab: item.key })}
+            onClick={() =>
+              updateSearchParam({
+                tab: item.key,
+                ...(item.key === 'overview' ? { agentId: 'all' } : {}),
+              })
+            }
           >
             {item.label}
           </Button>
@@ -127,8 +177,9 @@ export default function DashboardPage() {
       <DashboardFilters
         year={year}
         month={month}
-        agentId={agentId}
+        agentId={effectiveAgentId}
         agents={activeAgentsQuery.data ?? []}
+        agentDisabled={tab === 'overview'}
         onChangeMonth={value => updateSearchParam({ month: String(value) })}
         onChangeYear={value => updateSearchParam({ year: String(value) })}
         onChangeAgent={value => updateSearchParam({ agentId: value })}
@@ -149,7 +200,7 @@ export default function DashboardPage() {
             data={byServiceTypeQuery.data ?? []}
             isLoading={byServiceTypeQuery.isLoading}
           />
-          {agentId === 'all' && (
+          {effectiveAgentId === 'all' && (
             <div className="xl:col-span-2">
               <TopAgentsChart data={topAgentsQuery.data ?? []} isLoading={topAgentsQuery.isLoading} />
             </div>

@@ -14,6 +14,7 @@ interface DashboardFiltersProps {
   month: number
   agentId: string
   agents: ActiveAgent[]
+  agentDisabled?: boolean
   onChangeYear: (year: number) => void
   onChangeMonth: (month: number) => void
   onChangeAgent: (agentId: string) => void
@@ -39,6 +40,7 @@ export function DashboardFilters({
   month,
   agentId,
   agents,
+  agentDisabled = false,
   onChangeYear,
   onChangeMonth,
   onChangeAgent,
@@ -75,7 +77,7 @@ export function DashboardFilters({
           </SelectContent>
         </Select>
 
-        <Select value={agentId} onValueChange={onChangeAgent}>
+        <Select value={agentId} onValueChange={onChangeAgent} disabled={agentDisabled}>
           <SelectTrigger className="w-52 bg-slate-900/70 border-slate-700 text-slate-100">
             <SelectValue placeholder="Funcionário" />
           </SelectTrigger>
