@@ -177,6 +177,14 @@ export default function DashboardPage() {
             data={timeseriesQuery.data ?? []}
             isLoading={timeseriesQuery.isLoading}
             title="Comparativo diário"
+            xTickFormatter={value => {
+              const parts = value.split('-')
+              if (parts.length === 3) {
+                return parts[2]
+              }
+
+              return value
+            }}
           />
           <ServicesTimeSeriesChart
             data={monthlyTimeseriesQuery.data ?? []}

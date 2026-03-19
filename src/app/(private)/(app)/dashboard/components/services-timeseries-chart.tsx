@@ -14,9 +14,15 @@ interface ServicesTimeSeriesChartProps {
   data: AnalyticsTimeseriesPoint[]
   isLoading: boolean
   title?: string
+  xTickFormatter?: (value: string) => string
 }
 
-export function ServicesTimeSeriesChart({ data, isLoading, title = 'Atendimentos por período' }: ServicesTimeSeriesChartProps) {
+export function ServicesTimeSeriesChart({
+  data,
+  isLoading,
+  title = 'Atendimentos por período',
+  xTickFormatter,
+}: ServicesTimeSeriesChartProps) {
   return (
     <Card className="rounded-2xl bg-slate-800/60 border border-slate-700">
       <CardHeader>
@@ -33,7 +39,14 @@ export function ServicesTimeSeriesChart({ data, isLoading, title = 'Atendimentos
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <CartesianGrid vertical={false} className="stroke-slate-700" />
-              <XAxis dataKey="date" tickLine={false} axisLine={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={value =>
+                  xTickFormatter ? xTickFormatter(String(value)) : String(value)
+                }
+              />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
               <Line type="monotone" dataKey="totalServices" stroke="#0ea5e9" strokeWidth={2} />
             </LineChart>
