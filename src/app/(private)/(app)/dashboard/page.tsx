@@ -163,6 +163,14 @@ export default function DashboardPage() {
             data={timeseriesQuery.data ?? []}
             isLoading={timeseriesQuery.isLoading}
             title={agentId === 'all' ? 'Evolução diária (todos)' : 'Evolução diária (funcionário)'}
+            xTickFormatter={value => {
+              const parts = value.split('-')
+              if (parts.length === 3) {
+                return parts[2]
+              }
+
+              return value
+            }}
           />
           <ServiceTypeDonutChart
             data={byServiceTypeQuery.data ?? []}

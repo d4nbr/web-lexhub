@@ -13,12 +13,14 @@ function MetricCard({
   previous,
   variation,
   isLoading,
+  valueFormatter,
 }: {
   title: string
   current?: number
   previous?: number
   variation?: number
   isLoading: boolean
+  valueFormatter?: (value: number) => string
 }) {
   return (
     <Card className="rounded-2xl shadow-2xl backdrop-blur-lg bg-slate-800/60 border border-slate-700">
@@ -33,19 +35,33 @@ function MetricCard({
           </>
         ) : (
           <>
-            <div className="text-3xl font-calsans text-slate-100">{current ?? 0}</div>
+            <div className="text-3xl font-calsans text-slate-100">
+              {valueFormatter ? valueFormatter(current ?? 0) : (current ?? 0)}
+            </div>
             <p className="pt-2 text-xs text-slate-400">
               <span className={(variation ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                 {(variation ?? 0) >= 0 ? '+' : ''}
                 {(variation ?? 0).toFixed(1)}%
               </span>{' '}
-              vs período anterior ({previous ?? 0})
+              vs período anterior ({valueFormatter ? valueFormatter(previous ?? 0) : (previous ?? 0)})
             </p>
           </>
         )}
       </CardContent>
     </Card>
   )
+}
+
+function formatMinutesToHuman(minutes: number) {
+  const total = Math.max(0, Math.round(minutes))
+  const h = Math.floor(total / 60)
+  const m = total % 60
+
+  if (h === 0) {
+    return `${String(m).padStart(2, '0')}min`
+  }
+
+  return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}min`
 }
 
 export function OverviewCards({ data, isLoading }: OverviewCardsProps) {
@@ -66,11 +82,12 @@ export function OverviewCards({ data, isLoading }: OverviewCardsProps) {
         isLoading={isLoading}
       />
       <MetricCard
-        title="Atendimentos Abertos"
-        current={data?.totals.current.openServices}
-        previous={data?.totals.previous.openServices}
-        variation={data?.totals.variation.openServices}
+        title="Média de Atendimento"
+        current={data?.totals.current.averageResolutionMinutes}
+        previous={data?.totals.previous.averageResolutionMinutes}
+        variation={data?.totals.variation.averageResolutionMinutes}
         isLoading={isLoading}
+        valueFormatter={formatMinutesToHuman}
       />
     </div>
   )
