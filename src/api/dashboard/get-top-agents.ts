@@ -2,7 +2,7 @@ import { API } from '@/lib/axios'
 
 export interface TopAgentsFilters {
   year: number
-  month: number
+  month: number | 'all'
   limit?: number
 }
 

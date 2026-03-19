@@ -36,7 +36,8 @@ export default function DashboardPage() {
   const yearParam = searchParams.get('year')
   const monthParam = searchParams.get('month')
   const year = Number(yearParam ?? currentYear)
-  const month = Number(monthParam ?? currentMonth)
+  const month: number | 'all' =
+    monthParam === 'all' ? 'all' : Number(monthParam ?? currentMonth)
   const agentId = searchParams.get('agentId') ?? 'all'
   const tab = (searchParams.get('tab') ?? 'overview') as TabKey
 
@@ -194,7 +195,36 @@ export default function DashboardPage() {
           <ServicesTimeSeriesChart
             data={timeseriesQuery.data ?? []}
             isLoading={timeseriesQuery.isLoading}
-            title="Evolução diária no mês"
+            title={month === 'all' ? 'Evolução no ano' : 'Evolução diária no mês'}
+            xTickFormatter={value => {
+              if (month === 'all') {
+                const monthMap: Record<string, string> = {
+                  '01': 'jan',
+                  '02': 'fev',
+                  '03': 'mar',
+                  '04': 'abr',
+                  '05': 'mai',
+                  '06': 'jun',
+                  '07': 'jul',
+                  '08': 'ago',
+                  '09': 'set',
+                  '10': 'out',
+                  '11': 'nov',
+                  '12': 'dez',
+                }
+                const parts = value.split('-')
+                if (parts.length >= 2) {
+                  return monthMap[parts[1]] ?? value
+                }
+              }
+
+              const parts = value.split('-')
+              if (parts.length === 3) {
+                return parts[2]
+              }
+
+              return value
+            }}
           />
           <ServiceTypeDonutChart
             data={byServiceTypeQuery.data ?? []}
@@ -213,8 +243,37 @@ export default function DashboardPage() {
           <ServicesTimeSeriesChart
             data={timeseriesQuery.data ?? []}
             isLoading={timeseriesQuery.isLoading}
-            title={agentId === 'all' ? 'Evolução diária (todos)' : 'Evolução diária (funcionário)'}
+            title={
+              month === 'all'
+                ? agentId === 'all'
+                  ? 'Evolução no ano (todos)'
+                  : 'Evolução no ano (funcionário)'
+                : agentId === 'all'
+                  ? 'Evolução diária (todos)'
+                  : 'Evolução diária (funcionário)'
+            }
             xTickFormatter={value => {
+              if (month === 'all') {
+                const monthMap: Record<string, string> = {
+                  '01': 'jan',
+                  '02': 'fev',
+                  '03': 'mar',
+                  '04': 'abr',
+                  '05': 'mai',
+                  '06': 'jun',
+                  '07': 'jul',
+                  '08': 'ago',
+                  '09': 'set',
+                  '10': 'out',
+                  '11': 'nov',
+                  '12': 'dez',
+                }
+                const parts = value.split('-')
+                if (parts.length >= 2) {
+                  return monthMap[parts[1]] ?? value
+                }
+              }
+
               const parts = value.split('-')
               if (parts.length === 3) {
                 return parts[2]

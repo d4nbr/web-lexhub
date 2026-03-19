@@ -11,12 +11,12 @@ import {
 
 interface DashboardFiltersProps {
   year: number
-  month: number
+  month: number | 'all'
   agentId: string
   agents: ActiveAgent[]
   agentDisabled?: boolean
   onChangeYear: (year: number) => void
-  onChangeMonth: (month: number) => void
+  onChangeMonth: (month: number | 'all') => void
   onChangeAgent: (agentId: string) => void
 }
 
@@ -51,11 +51,17 @@ export function DashboardFilters({
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-wrap gap-2">
-        <Select value={String(month)} onValueChange={value => onChangeMonth(Number(value))}>
+        <Select
+          value={String(month)}
+          onValueChange={value =>
+            onChangeMonth(value === 'all' ? 'all' : Number(value))
+          }
+        >
           <SelectTrigger className="w-40 bg-slate-900/70 border-slate-700 text-slate-100">
             <SelectValue placeholder="Mês" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
             {MONTHS.map((label, index) => (
               <SelectItem key={label} value={String(index + 1)}>
                 {label}

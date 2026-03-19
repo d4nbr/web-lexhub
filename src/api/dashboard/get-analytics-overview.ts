@@ -2,7 +2,7 @@ import { API } from '@/lib/axios'
 
 export interface AnalyticsFilters {
   year: number
-  month: number
+  month: number | 'all'
   agentId: string
 }
 
