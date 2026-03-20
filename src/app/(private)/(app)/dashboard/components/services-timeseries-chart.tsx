@@ -28,7 +28,7 @@ export function ServicesTimeSeriesChart({
       <CardHeader>
         <CardTitle className="text-base text-slate-100">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-[280px]">
+      <CardContent className="h-[230px] sm:h-[280px]">
         {isLoading ? (
           <Skeleton className="h-full w-full bg-slate-700" />
         ) : data.length === 0 ? (
@@ -43,6 +43,8 @@ export function ServicesTimeSeriesChart({
                 dataKey="date"
                 tickLine={false}
                 axisLine={false}
+                minTickGap={16}
+                tick={{ fontSize: 11, fill: '#94a3b8' }}
                 tickFormatter={value =>
                   xTickFormatter ? xTickFormatter(String(value)) : String(value)
                 }

@@ -34,7 +34,7 @@ export function TopAgentsChart({ data, isLoading }: TopAgentsChartProps) {
       <CardHeader>
         <CardTitle className="text-base text-slate-100">Top funcionários</CardTitle>
       </CardHeader>
-      <CardContent className="h-[340px]">
+      <CardContent className="h-[320px] sm:h-[360px]">
         {isLoading ? (
           <Skeleton className="h-full w-full bg-slate-700" />
         ) : data.length === 0 ? (

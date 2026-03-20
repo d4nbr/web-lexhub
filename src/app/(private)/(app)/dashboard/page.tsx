@@ -159,16 +159,17 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl font-calsans font-bold tracking-tight">Dashboard Analytics</h1>
+      <h1 className="text-2xl sm:text-3xl font-calsans font-bold tracking-tight">Dashboard Analytics</h1>
 
       <Separator orientation="horizontal" />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex min-w-max gap-2">
         {TABS.map(item => (
           <Button
             key={item.key}
             variant={tab === item.key ? 'default' : 'outline'}
-            className={tab === item.key ? '' : 'border-slate-700 text-slate-200'}
+            className={`${tab === item.key ? '' : 'border-slate-700 text-slate-200'} h-9 px-3 whitespace-nowrap`}
             onClick={() =>
               updateSearchParam({
                 tab: item.key,
@@ -179,6 +180,7 @@ export default function DashboardPage() {
             {item.label}
           </Button>
         ))}
+        </div>
       </div>
 
       <DashboardFilters

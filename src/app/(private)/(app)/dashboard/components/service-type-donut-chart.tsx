@@ -37,7 +37,7 @@ export function ServiceTypeDonutChart({ data, isLoading }: ServiceTypeDonutChart
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
           {isLoading
             ? Array.from({ length: 5 }).map((_, index) => (
                 <Skeleton key={String(index)} className="h-5 w-full bg-slate-700" />
