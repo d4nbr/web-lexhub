@@ -75,7 +75,7 @@ export function OverviewCards({ data, isLoading }: OverviewCardsProps) {
         isLoading={isLoading}
       />
       <MetricCard
-        title="Atendimentos Externos"
+        title="Atendimentos Remotos"
         current={data?.totals.current.externalServices}
         previous={data?.totals.previous.externalServices}
         variation={data?.totals.variation.externalServices}
