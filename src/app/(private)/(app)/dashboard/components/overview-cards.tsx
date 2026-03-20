@@ -75,10 +75,10 @@ export function OverviewCards({ data, isLoading }: OverviewCardsProps) {
         isLoading={isLoading}
       />
       <MetricCard
-        title="Atendimentos Concluídos"
-        current={data?.totals.current.completedServices}
-        previous={data?.totals.previous.completedServices}
-        variation={data?.totals.variation.completedServices}
+        title="Atendimentos Externos"
+        current={data?.totals.current.externalServices}
+        previous={data?.totals.previous.externalServices}
+        variation={data?.totals.variation.externalServices}
         isLoading={isLoading}
       />
       <MetricCard

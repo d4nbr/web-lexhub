@@ -12,17 +12,17 @@ export interface AnalyticsOverviewResponse {
   totals: {
     current: {
       totalServices: number
-      completedServices: number
+      externalServices: number
       averageResolutionMinutes: number
     }
     previous: {
       totalServices: number
-      completedServices: number
+      externalServices: number
       averageResolutionMinutes: number
     }
     variation: {
       totalServices: number
-      completedServices: number
+      externalServices: number
       averageResolutionMinutes: number
     }
   }
