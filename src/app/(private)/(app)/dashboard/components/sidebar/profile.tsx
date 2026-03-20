@@ -19,7 +19,11 @@ import { LoaderCircle, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
-export function Profile() {
+interface ProfileProps {
+  collapsed?: boolean
+}
+
+export function Profile({ collapsed = false }: ProfileProps) {
   const router = useRouter()
 
   // FIXME: Query para pegar o perfil do usuário logado
@@ -61,40 +65,42 @@ export function Profile() {
   }
 
   return (
-    <div className="flex items-center max-w-[280px] overflow-hidden">
-      <div className="flex flex-col space-y-1 overflow-hidden">
-        <span className="font-medium truncate text-ellipsis whitespace-nowrap">
-          {isProfileLoading ? (
-            <Skeleton className="h-4 w-40" />
-          ) : (
-            profile?.agent.name
-          )}
-        </span>
-        <span className="font-medium text-xs">
-          {isProfileLoading ? (
-            <Skeleton className="h-3 w-32" />
-          ) : (
-            getRoleLabel(profile?.agent.role)
-          )}
-        </span>
-        <span className="text-xs text-muted-foreground truncate text-ellipsis whitespace-nowrap">
-          {isProfileLoading ? (
-            <Skeleton className="h-3 w-34" />
-          ) : (
-            profile?.agent.email
-          )}
-        </span>
-      </div>
+    <div className={`flex items-center overflow-hidden ${collapsed ? 'justify-center' : 'max-w-[280px]'}`}>
+      {!collapsed && (
+        <div className="flex flex-col space-y-1 overflow-hidden">
+          <span className="font-medium truncate text-ellipsis whitespace-nowrap">
+            {isProfileLoading ? (
+              <Skeleton className="h-4 w-40" />
+            ) : (
+              profile?.agent.name
+            )}
+          </span>
+          <span className="font-medium text-xs">
+            {isProfileLoading ? (
+              <Skeleton className="h-3 w-32" />
+            ) : (
+              getRoleLabel(profile?.agent.role)
+            )}
+          </span>
+          <span className="text-xs text-muted-foreground truncate text-ellipsis whitespace-nowrap">
+            {isProfileLoading ? (
+              <Skeleton className="h-3 w-34" />
+            ) : (
+              profile?.agent.email
+            )}
+          </span>
+        </div>
+      )}
 
       <Dialog>
         <DialogTrigger asChild>
           {isProfileLoading ? (
-            <Skeleton className="size-8 rounded ml-auto" />
+            <Skeleton className={`size-8 rounded ${collapsed ? '' : 'ml-auto'}`} />
           ) : (
             <Button
               type="button"
               variant="outline"
-              className="ml-auto rounded cursor-pointer text-xs text-muted-foreground hover:border-sky-600 transition-colors flex-shrink-0"
+              className={`rounded cursor-pointer text-xs text-muted-foreground hover:border-sky-600 transition-colors flex-shrink-0 ${collapsed ? '' : 'ml-auto'}`}
               title="Sair"
             >
               <LogOut className="size-4" />
