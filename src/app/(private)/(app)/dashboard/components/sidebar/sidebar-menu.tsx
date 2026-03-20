@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Monitor,
   Users,
+  Wallet,
 } from 'lucide-react'
 import { NavItem } from './nav-item'
 import { Profile } from './profile'
@@ -74,6 +75,7 @@ export function SidebarMenu({ hasPrivilegedAccess }: SidebarMenuProps) {
 
         {hasPrivilegedAccess && (
           <>
+            <NavItem title="Financeiro" icon={Wallet} route="/financial" collapsed={collapsed} />
             <NavItem
               title="Controle de Serviços"
               icon={Bolt}
