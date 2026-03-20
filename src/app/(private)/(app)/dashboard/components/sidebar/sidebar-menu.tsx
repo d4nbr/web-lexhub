@@ -27,7 +27,13 @@ export function SidebarMenu({ hasPrivilegedAccess }: SidebarMenuProps) {
 
   useEffect(() => {
     const storedValue = window.localStorage.getItem('oab-sidebar-collapsed')
-    setCollapsed(storedValue === 'true')
+
+    if (storedValue !== null) {
+      setCollapsed(storedValue === 'true')
+      return
+    }
+
+    setCollapsed(window.innerWidth < 1024)
   }, [])
 
   function handleToggleSidebar() {

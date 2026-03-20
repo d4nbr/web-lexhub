@@ -17,7 +17,7 @@ export default async function DashLayout({
     <div className="flex min-h-screen text-sm">
       <SidebarMenu hasPrivilegedAccess={hasPrivilegedAccess} />
 
-      <main className="flex-1 px-8 pb-12 pt-8">
+      <main className="flex-1 px-3 pb-8 pt-4 sm:px-5 sm:pt-6 lg:px-8 lg:pb-12 lg:pt-8">
         <div className="animate-slide-up">{children}</div>
       </main>
     </div>

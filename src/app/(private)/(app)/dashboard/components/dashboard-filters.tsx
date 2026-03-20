@@ -49,14 +49,14 @@ export function DashboardFilters({
 }: DashboardFiltersProps) {
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div className="flex flex-wrap gap-2">
+      <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_110px] lg:flex lg:w-auto lg:flex-wrap">
         <Select
           value={String(month)}
           onValueChange={value =>
             onChangeMonth(value === 'all' ? 'all' : Number(value))
           }
         >
-          <SelectTrigger className="w-40 bg-slate-900/70 border-slate-700 text-slate-100">
+          <SelectTrigger className="w-full lg:w-40 bg-slate-900/70 border-slate-700 text-slate-100">
             <SelectValue placeholder="Mês" />
           </SelectTrigger>
           <SelectContent>
@@ -70,7 +70,7 @@ export function DashboardFilters({
         </Select>
 
         <Select value={String(year)} onValueChange={value => onChangeYear(Number(value))}>
-          <SelectTrigger className="w-28 bg-slate-900/70 border-slate-700 text-slate-100">
+          <SelectTrigger className="w-full lg:w-28 bg-slate-900/70 border-slate-700 text-slate-100">
             <SelectValue placeholder="Ano" />
           </SelectTrigger>
           <SelectContent>
@@ -83,7 +83,7 @@ export function DashboardFilters({
         </Select>
 
         <Select value={agentId} onValueChange={onChangeAgent} disabled={agentDisabled}>
-          <SelectTrigger className="w-52 bg-slate-900/70 border-slate-700 text-slate-100">
+          <SelectTrigger className="w-full sm:col-span-2 lg:col-span-1 lg:w-52 bg-slate-900/70 border-slate-700 text-slate-100">
             <SelectValue placeholder="Funcionário" />
           </SelectTrigger>
           <SelectContent>
