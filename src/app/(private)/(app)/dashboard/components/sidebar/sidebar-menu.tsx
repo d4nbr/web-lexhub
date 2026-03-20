@@ -54,7 +54,7 @@ export function SidebarMenu({ hasPrivilegedAccess }: SidebarMenuProps) {
           type="button"
           variant="ghost"
           size="icon"
-          className="text-slate-300 hover:text-slate-100"
+          className="h-7 w-7 p-0 rounded-md text-slate-300 hover:text-slate-100 hover:bg-slate-700/35"
           onClick={handleToggleSidebar}
           title={collapsed ? 'Expandir menu' : 'Recolher menu'}
         >
