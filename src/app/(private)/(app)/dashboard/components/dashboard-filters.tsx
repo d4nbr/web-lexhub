@@ -13,6 +13,7 @@ interface DashboardFiltersProps {
   year: number
   month: number | 'all'
   agentId: string
+  years: number[]
   agents: ActiveAgent[]
   agentDisabled?: boolean
   onChangeYear: (year: number) => void
@@ -39,15 +40,13 @@ export function DashboardFilters({
   year,
   month,
   agentId,
+  years,
   agents,
   agentDisabled = false,
   onChangeYear,
   onChangeMonth,
   onChangeAgent,
 }: DashboardFiltersProps) {
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 6 }, (_, index) => currentYear - index)
-
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-wrap gap-2">

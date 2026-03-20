@@ -16,6 +16,7 @@ import { getAnalyticsOverview } from '@/api/dashboard/get-analytics-overview'
 import { getAnalyticsTimeseries } from '@/api/dashboard/get-analytics-timeseries'
 import { getTopAgents } from '@/api/dashboard/get-top-agents'
 import { getByServiceType } from '@/api/dashboard/get-by-service-type'
+import { getAnalyticsYears } from '@/api/dashboard/get-analytics-years'
 
 const TABS = [
   { key: 'overview', label: 'Visão Geral' },
@@ -61,6 +62,11 @@ export default function DashboardPage() {
   const activeAgentsQuery = useQuery({
     queryKey: ['agents', 'all-active'],
     queryFn: getAllActiveAgents,
+  })
+
+  const yearsQuery = useQuery({
+    queryKey: ['dashboard', 'years'],
+    queryFn: getAnalyticsYears,
   })
 
   const overviewQuery = useQuery({
@@ -179,6 +185,7 @@ export default function DashboardPage() {
         year={year}
         month={month}
         agentId={effectiveAgentId}
+        years={yearsQuery.data ?? [currentYear]}
         agents={activeAgentsQuery.data ?? []}
         agentDisabled={tab === 'overview'}
         onChangeMonth={value => updateSearchParam({ month: String(value) })}
