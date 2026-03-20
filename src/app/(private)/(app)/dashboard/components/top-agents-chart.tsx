@@ -64,7 +64,7 @@ export function TopAgentsChart({ data, isLoading }: TopAgentsChartProps) {
                   payload?.payload?.agentName ?? 'Funcionário',
                 ]}
               />
-              <Bar dataKey="totalServices" fill="#14b8a6" radius={[0, 6, 6, 0]}>
+              <Bar dataKey="totalServices" fill="#0ea5e9" radius={[0, 6, 6, 0]}>
                 <LabelList
                   dataKey="totalServices"
                   position="right"
