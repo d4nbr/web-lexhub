@@ -95,78 +95,93 @@ export default function FinancialPage() {
 
       <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-slate-200 space-y-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <Select
-            value={draft.sit_fin_atual ?? 'all'}
-            onValueChange={value => updateDraft('sit_fin_atual', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Situação financeira" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ADIMPLENTE">Adimplentes</SelectItem>
-              <SelectItem value="INADIMPLENTE">Inadimplentes</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-400">Situação Financeira (Todos/Adimplentes/Inadimplentes)</p>
+            <Select
+              value={draft.sit_fin_atual ?? 'all'}
+              onValueChange={value => updateDraft('sit_fin_atual', value === 'all' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Situação financeira" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="ADIMPLENTE">Adimplentes</SelectItem>
+                <SelectItem value="INADIMPLENTE">Inadimplentes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            value={draft.tipo_inscricao ?? 'all'}
-            onValueChange={value => updateDraft('tipo_inscricao', value as FinancialDraftFilters['tipo_inscricao'])}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Tipo inscrição" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="originaria">Originária</SelectItem>
-              <SelectItem value="suplementar">Suplementar</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-400">Tipo Inscrição (Todos/Originária/Suplementar)</p>
+            <Select
+              value={draft.tipo_inscricao ?? 'all'}
+              onValueChange={value => updateDraft('tipo_inscricao', value as FinancialDraftFilters['tipo_inscricao'])}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tipo inscrição" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="originaria">Originária</SelectItem>
+                <SelectItem value="suplementar">Suplementar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            value={draft.sexo ?? 'all'}
-            onValueChange={value => updateDraft('sexo', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sexo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="M">Masculino</SelectItem>
-              <SelectItem value="F">Feminino</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-400">Sexo (Todos/Masculino/Feminino)</p>
+            <Select
+              value={draft.sexo ?? 'all'}
+              onValueChange={value => updateDraft('sexo', value === 'all' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sexo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="M">Masculino</SelectItem>
+                <SelectItem value="F">Feminino</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            value={draft.subsecao ?? 'all'}
-            onValueChange={value => updateDraft('subsecao', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Seccional" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {SUBSECAO_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-400">Seccional (Todos/São Luís/Codó/Pinheiro/etc)</p>
+            <Select
+              value={draft.subsecao ?? 'all'}
+              onValueChange={value => updateDraft('subsecao', value === 'all' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seccional" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {SUBSECAO_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            value={draft.pcd ?? 'all'}
-            onValueChange={value => updateDraft('pcd', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="PCD" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="SIM">Sim</SelectItem>
-              <SelectItem value="NAO">Não</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-1">
+            <p className="text-xs text-slate-400">PCD (Todos/Sim/Não)</p>
+            <Select
+              value={draft.pcd ?? 'all'}
+              onValueChange={value => updateDraft('pcd', value === 'all' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="PCD" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="SIM">Sim</SelectItem>
+                <SelectItem value="NAO">Não</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
