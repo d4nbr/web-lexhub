@@ -380,7 +380,10 @@ export default function FinancialPage() {
 
       {lawyersQuery.isLoading && (
         <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 text-slate-300">
-          Carregando dados financeiros...
+          <div className="flex items-center gap-3">
+            <span className="inline-block size-4 rounded-full border-2 border-slate-500 border-t-cyan-400 animate-spin" />
+            <span className="animate-pulse">Carregando dados financeiros...</span>
+          </div>
         </div>
       )}
 
