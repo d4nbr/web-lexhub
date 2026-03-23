@@ -27,10 +27,30 @@ import {
 
 const DEFAULT_PAGE_SIZE = 50
 
+const SUBSECAO_OPTIONS = [
+  { value: 'SAO LUIS', label: 'São Luís' },
+  { value: 'CODO', label: 'Codó' },
+  { value: 'PINHEIRO', label: 'Pinheiro' },
+  { value: 'CAXIAS', label: 'Caxias' },
+  { value: 'IMPERATRIZ', label: 'Imperatriz' },
+  { value: 'BALSAS', label: 'Balsas' },
+  { value: 'TIMON', label: 'Timon' },
+  { value: 'BACABAL', label: 'Bacabal' },
+  { value: 'SANTA INES', label: 'Santa Inês' },
+  { value: 'PRESIDENTE DUTRA', label: 'Presidente Dutra' },
+  { value: 'BARRA DO CORDA', label: 'Barra do Corda' },
+  { value: 'GRAJAU', label: 'Grajaú' },
+]
+
+interface FinancialDraftFilters extends FinancialLawyersFilters {
+  tipo_inscricao?: 'all' | 'originaria' | 'suplementar'
+}
+
 export default function FinancialPage() {
-  const [draft, setDraft] = useState<FinancialLawyersFilters>({
+  const [draft, setDraft] = useState<FinancialDraftFilters>({
     page: 1,
     page_size: DEFAULT_PAGE_SIZE,
+    tipo_inscricao: 'all',
   })
   const [applied, setApplied] = useState<FinancialLawyersFilters | null>(null)
 
@@ -41,10 +61,23 @@ export default function FinancialPage() {
   })
 
   function handleSearch() {
-    setApplied({ ...draft, page: 1 })
+    const normalizedSuplementar =
+      draft.tipo_inscricao === 'suplementar'
+        ? 'SIM'
+        : draft.tipo_inscricao === 'originaria'
+          ? 'NAO'
+          : ''
+
+    const { tipo_inscricao, ...rest } = draft
+
+    setApplied({
+      ...rest,
+      suplementar: normalizedSuplementar,
+      page: 1,
+    })
   }
 
-  function updateDraft(field: keyof FinancialLawyersFilters, value?: string | number) {
+  function updateDraft(field: keyof FinancialDraftFilters, value?: string | number) {
     setDraft(prev => ({ ...prev, [field]: value }))
   }
 
@@ -61,13 +94,7 @@ export default function FinancialPage() {
       <Separator orientation="horizontal" />
 
       <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-slate-200 space-y-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Input
-            placeholder="Inscrição (ex: 2406-A)"
-            value={draft.inscricao ?? ''}
-            onChange={event => updateDraft('inscricao', event.target.value)}
-          />
-
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
           <Select
             value={draft.sit_fin_atual ?? 'all'}
             onValueChange={value => updateDraft('sit_fin_atual', value === 'all' ? '' : value)}
@@ -76,31 +103,70 @@ export default function FinancialPage() {
               <SelectValue placeholder="Situação financeira" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas situações</SelectItem>
-              <SelectItem value="ADIMPLENTE">Adimplente</SelectItem>
-              <SelectItem value="INADIMPLENTE">Inadimplente</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="ADIMPLENTE">Adimplentes</SelectItem>
+              <SelectItem value="INADIMPLENTE">Inadimplentes</SelectItem>
             </SelectContent>
           </Select>
 
           <Select
-            value={draft.suplementar ?? 'all'}
-            onValueChange={value => updateDraft('suplementar', value === 'all' ? '' : value)}
+            value={draft.tipo_inscricao ?? 'all'}
+            onValueChange={value => updateDraft('tipo_inscricao', value as FinancialDraftFilters['tipo_inscricao'])}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Suplementar" />
+              <SelectValue placeholder="Tipo inscrição" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="SIM">SIM</SelectItem>
-              <SelectItem value="NAO">NAO</SelectItem>
+              <SelectItem value="originaria">Originária</SelectItem>
+              <SelectItem value="suplementar">Suplementar</SelectItem>
             </SelectContent>
           </Select>
 
-          <Input
-            placeholder="UF (ex: MA)"
-            value={draft.uf_res ?? ''}
-            onChange={event => updateDraft('uf_res', event.target.value.toUpperCase())}
-          />
+          <Select
+            value={draft.sexo ?? 'all'}
+            onValueChange={value => updateDraft('sexo', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sexo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="M">Masculino</SelectItem>
+              <SelectItem value="F">Feminino</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={draft.subsecao ?? 'all'}
+            onValueChange={value => updateDraft('subsecao', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Seccional" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {SUBSECAO_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={draft.pcd ?? 'all'}
+            onValueChange={value => updateDraft('pcd', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="PCD" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="SIM">Sim</SelectItem>
+              <SelectItem value="NAO">Não</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
