@@ -54,6 +54,51 @@ interface FinancialDraftFilters extends FinancialLawyersFilters {
   tipo_inscricao?: 'all' | 'originaria' | 'suplementar'
 }
 
+interface FinancialDashboardSummary {
+  total: number
+  adimplentes: number
+  inadimplentes: number
+  suplementares: number
+  pcdSim: number
+  masculino: number
+  feminino: number
+}
+
+function calcPercent(value: number, total: number) {
+  if (!total) return 0
+  return Number(((value / total) * 100).toFixed(2))
+}
+
+async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
+  const baseFilters = { ...filters, page: 1, page_size: 200 }
+  const first = await getFinancialLawyers(baseFilters)
+
+  let allItems = [...first.items]
+  const totalPages = first.total_pages || 1
+
+  for (let page = 2; page <= totalPages; page += 1) {
+    const next = await getFinancialLawyers({ ...baseFilters, page })
+    allItems = allItems.concat(next.items)
+  }
+
+  const adimplentes = allItems.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
+  const inadimplentes = allItems.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
+  const suplementares = allItems.filter(item => item.suplementar === 'SIM').length
+  const pcdSim = allItems.filter(item => item.pcd === 'SIM').length
+  const masculino = allItems.filter(item => item.sexo === 'M').length
+  const feminino = allItems.filter(item => item.sexo === 'F').length
+
+  return {
+    total: first.total,
+    adimplentes,
+    inadimplentes,
+    suplementares,
+    pcdSim,
+    masculino,
+    feminino,
+  } satisfies FinancialDashboardSummary
+}
+
 export default function FinancialPage() {
   const [draft, setDraft] = useState<FinancialDraftFilters>({
     page: 1,
@@ -67,6 +112,12 @@ export default function FinancialPage() {
     queryKey: ['financial', 'lawyers', applied],
     queryFn: () => getFinancialLawyers(applied ?? {}),
     enabled: applied !== null,
+  })
+
+  const dashboardSummaryQuery = useQuery({
+    queryKey: ['financial', 'dashboard-summary', applied],
+    queryFn: () => getFinancialDashboardSummary(applied ?? {}),
+    enabled: isDashboardModalOpen && applied !== null,
   })
 
   function handleSearch() {
@@ -310,48 +361,115 @@ export default function FinancialPage() {
       )}
 
       <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
-        <DialogContent className="border-slate-700 bg-slate-900 text-slate-100 sm:max-w-2xl">
+        <DialogContent className="border-slate-700 bg-slate-900 text-slate-100 sm:max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro (resultado da busca)</DialogTitle>
             <DialogDescription>
-              Resumo baseado no retorno atual da busca/listagem aplicada.
+              Resumo considerando todo o total filtrado da busca aplicada.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Total filtrado (todas as páginas)</p>
-              <p className="text-xl font-semibold">{data?.total ?? 0}</p>
+          {dashboardSummaryQuery.isLoading && (
+            <div className="rounded-lg border border-slate-700 p-4 text-slate-300">
+              Gerando dashboard com base em todas as páginas filtradas...
             </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Registros na página atual</p>
-              <p className="text-xl font-semibold">{pageSummary.pageCount}</p>
+          )}
+
+          {dashboardSummaryQuery.isError && (
+            <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-200">
+              Falha ao gerar resumo completo do dashboard.
             </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Adimplentes (página atual)</p>
-              <p className="text-xl font-semibold">{pageSummary.adimplentes}</p>
-            </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Inadimplentes (página atual)</p>
-              <p className="text-xl font-semibold">{pageSummary.inadimplentes}</p>
-            </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Suplementares (página atual)</p>
-              <p className="text-xl font-semibold">{pageSummary.suplementares}</p>
-            </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">PCD = Sim (página atual)</p>
-              <p className="text-xl font-semibold">{pageSummary.pcdSim}</p>
-            </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Masculino (página atual)</p>
-              <p className="text-xl font-semibold">{pageSummary.masculino}</p>
-            </div>
-            <div className="rounded-lg border border-slate-700 p-3">
-              <p className="text-xs text-slate-400">Feminino (página atual)</p>
-              <p className="text-xl font-semibold">{pageSummary.feminino}</p>
-            </div>
-          </div>
+          )}
+
+          {dashboardSummaryQuery.data && (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-lg border border-slate-700 p-3">
+                  <p className="text-xs text-slate-400">Total filtrado</p>
+                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.total}</p>
+                </div>
+                <div className="rounded-lg border border-slate-700 p-3">
+                  <p className="text-xs text-slate-400">Adimplentes</p>
+                  <p className="text-xl font-semibold">
+                    {dashboardSummaryQuery.data.adimplentes} / {dashboardSummaryQuery.data.total}
+                  </p>
+                  <p className="text-xs text-emerald-400">
+                    {calcPercent(dashboardSummaryQuery.data.adimplentes, dashboardSummaryQuery.data.total)}%
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-700 p-3">
+                  <p className="text-xs text-slate-400">Inadimplentes</p>
+                  <p className="text-xl font-semibold">
+                    {dashboardSummaryQuery.data.inadimplentes} / {dashboardSummaryQuery.data.total}
+                  </p>
+                  <p className="text-xs text-rose-400">
+                    {calcPercent(dashboardSummaryQuery.data.inadimplentes, dashboardSummaryQuery.data.total)}%
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-700 p-3">
+                  <p className="text-xs text-slate-400">Suplementares</p>
+                  <p className="text-xl font-semibold">
+                    {dashboardSummaryQuery.data.suplementares} / {dashboardSummaryQuery.data.total}
+                  </p>
+                  <p className="text-xs text-cyan-400">
+                    {calcPercent(dashboardSummaryQuery.data.suplementares, dashboardSummaryQuery.data.total)}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-700 p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-slate-200">Gráficos (percentual sobre o total filtrado)</h3>
+
+                {[
+                  {
+                    label: 'Adimplentes',
+                    value: dashboardSummaryQuery.data.adimplentes,
+                    color: 'bg-emerald-500',
+                  },
+                  {
+                    label: 'Inadimplentes',
+                    value: dashboardSummaryQuery.data.inadimplentes,
+                    color: 'bg-rose-500',
+                  },
+                  {
+                    label: 'Suplementares',
+                    value: dashboardSummaryQuery.data.suplementares,
+                    color: 'bg-cyan-500',
+                  },
+                  {
+                    label: 'PCD = Sim',
+                    value: dashboardSummaryQuery.data.pcdSim,
+                    color: 'bg-violet-500',
+                  },
+                  {
+                    label: 'Masculino',
+                    value: dashboardSummaryQuery.data.masculino,
+                    color: 'bg-sky-500',
+                  },
+                  {
+                    label: 'Feminino',
+                    value: dashboardSummaryQuery.data.feminino,
+                    color: 'bg-pink-500',
+                  },
+                ].map(metric => {
+                  const pct = calcPercent(metric.value, dashboardSummaryQuery.data.total)
+                  return (
+                    <div key={metric.label} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs text-slate-300">
+                        <span>{metric.label}</span>
+                        <span>
+                          {metric.value} / {dashboardSummaryQuery.data.total} ({pct}%)
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
+                        <div className={`h-full ${metric.color}`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDashboardModalOpen(false)}>
