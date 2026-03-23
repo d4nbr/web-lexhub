@@ -30,8 +30,21 @@ import {
 } from '@/components/ui/dialog'
 import {
   getFinancialLawyers,
+  type FinancialLawyerItem,
   type FinancialLawyersFilters,
 } from '@/api/financial/get-financial-lawyers'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Cell,
+} from 'recharts'
 
 const DEFAULT_PAGE_SIZE = 50
 
@@ -55,13 +68,21 @@ interface FinancialDraftFilters extends FinancialLawyersFilters {
 }
 
 interface FinancialDashboardSummary {
-  total: number
+  totalBase: number
+  totalFiltrado: number
   adimplentes: number
   inadimplentes: number
   suplementares: number
+  originarias: number
   pcdSim: number
   masculino: number
   feminino: number
+  seccionalRate: Array<{
+    subsecao: string
+    adimplentes: number
+    totalSeccional: number
+    percentual: number
+  }>
 }
 
 function calcPercent(value: number, total: number) {
@@ -69,33 +90,93 @@ function calcPercent(value: number, total: number) {
   return Number(((value / total) * 100).toFixed(2))
 }
 
-async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
-  const baseFilters = { ...filters, page: 1, page_size: 200 }
-  const first = await getFinancialLawyers(baseFilters)
+async function fetchAllFinancialLawyers(filters: FinancialLawyersFilters) {
+  const pageSize = 200
+  const first = await getFinancialLawyers({ ...filters, page: 1, page_size: pageSize })
 
-  let allItems = [...first.items]
+  const allItems: FinancialLawyerItem[] = [...first.items]
   const totalPages = first.total_pages || 1
 
-  for (let page = 2; page <= totalPages; page += 1) {
-    const next = await getFinancialLawyers({ ...baseFilters, page })
-    allItems = allItems.concat(next.items)
-  }
+  const pages = Array.from({ length: Math.max(totalPages - 1, 0) }, (_, i) => i + 2)
+  const concurrency = 8
 
-  const adimplentes = allItems.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
-  const inadimplentes = allItems.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
-  const suplementares = allItems.filter(item => item.suplementar === 'SIM').length
-  const pcdSim = allItems.filter(item => item.pcd === 'SIM').length
-  const masculino = allItems.filter(item => item.sexo === 'M').length
-  const feminino = allItems.filter(item => item.sexo === 'F').length
+  for (let i = 0; i < pages.length; i += concurrency) {
+    const chunk = pages.slice(i, i + concurrency)
+    const results = await Promise.all(
+      chunk.map(page => getFinancialLawyers({ ...filters, page, page_size: pageSize }))
+    )
+
+    results.forEach(result => {
+      allItems.push(...result.items)
+    })
+  }
 
   return {
     total: first.total,
+    items: allItems,
+  }
+}
+
+async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
+  const { page: _p, page_size: _s, ...filterWithoutPagination } = filters
+
+  const [baseData, filteredData] = await Promise.all([
+    fetchAllFinancialLawyers({}),
+    fetchAllFinancialLawyers(filterWithoutPagination),
+  ])
+
+  const baseItems = baseData.items
+  const filteredItems = filteredData.items
+
+  const totalBase = baseData.total
+  const totalFiltrado = filteredData.total
+
+  const adimplentes = filteredItems.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
+  const inadimplentes = filteredItems.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
+  const suplementares = filteredItems.filter(item => item.suplementar === 'SIM').length
+  const originarias = filteredItems.filter(item => item.suplementar === 'NAO').length
+  const pcdSim = filteredItems.filter(item => item.pcd === 'SIM').length
+  const masculino = filteredItems.filter(item => item.sexo === 'M').length
+  const feminino = filteredItems.filter(item => item.sexo === 'F').length
+
+  const baseBySubsecao = new Map<string, number>()
+  baseItems.forEach(item => {
+    const key = item.subsecao || 'NÃO INFORMADA'
+    baseBySubsecao.set(key, (baseBySubsecao.get(key) ?? 0) + 1)
+  })
+
+  const adimplentesBySubsecao = new Map<string, number>()
+  filteredItems
+    .filter(item => item.sit_fin_atual === 'ADIMPLENTE')
+    .forEach(item => {
+      const key = item.subsecao || 'NÃO INFORMADA'
+      adimplentesBySubsecao.set(key, (adimplentesBySubsecao.get(key) ?? 0) + 1)
+    })
+
+  const seccionalRate = Array.from(adimplentesBySubsecao.entries())
+    .map(([subsecao, adimplentesCount]) => {
+      const totalSeccional = baseBySubsecao.get(subsecao) ?? 0
+      return {
+        subsecao,
+        adimplentes: adimplentesCount,
+        totalSeccional,
+        percentual: calcPercent(adimplentesCount, totalSeccional),
+      }
+    })
+    .sort((a, b) => b.percentual - a.percentual)
+    .slice(0, 10)
+
+  return {
+    totalBase,
+    totalFiltrado,
     adimplentes,
     inadimplentes,
     suplementares,
+    originarias,
     pcdSim,
     masculino,
     feminino,
+    seccionalRate,
   } satisfies FinancialDashboardSummary
 }
 
@@ -148,26 +229,30 @@ export default function FinancialPage() {
 
   const data = lawyersQuery.data
 
-  const pageSummary = useMemo(() => {
-    const items = data?.items ?? []
+  const pieData = useMemo(() => {
+    if (!dashboardSummaryQuery.data) return null
 
-    const adimplentes = items.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
-    const inadimplentes = items.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
-    const suplementares = items.filter(item => item.suplementar === 'SIM').length
-    const pcdSim = items.filter(item => item.pcd === 'SIM').length
-    const masculino = items.filter(item => item.sexo === 'M').length
-    const feminino = items.filter(item => item.sexo === 'F').length
+    const d = dashboardSummaryQuery.data
 
     return {
-      pageCount: items.length,
-      adimplentes,
-      inadimplentes,
-      suplementares,
-      pcdSim,
-      masculino,
-      feminino,
+      adimplencia: [
+        { name: 'Adimplentes', value: d.adimplentes, color: '#22c55e' },
+        { name: 'Restante base', value: Math.max(d.totalBase - d.adimplentes, 0), color: '#334155' },
+      ],
+      sexo: [
+        { name: 'Masculino', value: d.masculino, color: '#38bdf8' },
+        { name: 'Feminino', value: d.feminino, color: '#f472b6' },
+      ],
+      pcd: [
+        { name: 'PCD Sim', value: d.pcdSim, color: '#a78bfa' },
+        { name: 'Restante base', value: Math.max(d.totalBase - d.pcdSim, 0), color: '#334155' },
+      ],
+      tipoInscricao: [
+        { name: 'Suplementar', value: d.suplementares, color: '#06b6d4' },
+        { name: 'Originária', value: d.originarias, color: '#f59e0b' },
+      ],
     }
-  }, [data])
+  }, [dashboardSummaryQuery.data])
 
   return (
     <div className="flex flex-col gap-4">
@@ -381,92 +466,131 @@ export default function FinancialPage() {
             </div>
           )}
 
-          {dashboardSummaryQuery.data && (
+          {dashboardSummaryQuery.data && pieData && (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Total filtrado</p>
-                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.total}</p>
+                  <p className="text-xs text-slate-400">Total base</p>
+                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalBase}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Adimplentes</p>
+                  <p className="text-xs text-slate-400">Total do filtro aplicado</p>
+                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalFiltrado}</p>
+                </div>
+                <div className="rounded-lg border border-slate-700 p-3">
+                  <p className="text-xs text-slate-400">Adimplentes / Total base</p>
                   <p className="text-xl font-semibold">
-                    {dashboardSummaryQuery.data.adimplentes} / {dashboardSummaryQuery.data.total}
+                    {dashboardSummaryQuery.data.adimplentes} / {dashboardSummaryQuery.data.totalBase}
                   </p>
                   <p className="text-xs text-emerald-400">
-                    {calcPercent(dashboardSummaryQuery.data.adimplentes, dashboardSummaryQuery.data.total)}%
+                    {calcPercent(
+                      dashboardSummaryQuery.data.adimplentes,
+                      dashboardSummaryQuery.data.totalBase
+                    )}%
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Inadimplentes</p>
+                  <p className="text-xs text-slate-400">Inadimplentes / Total base</p>
                   <p className="text-xl font-semibold">
-                    {dashboardSummaryQuery.data.inadimplentes} / {dashboardSummaryQuery.data.total}
+                    {dashboardSummaryQuery.data.inadimplentes} / {dashboardSummaryQuery.data.totalBase}
                   </p>
                   <p className="text-xs text-rose-400">
-                    {calcPercent(dashboardSummaryQuery.data.inadimplentes, dashboardSummaryQuery.data.total)}%
-                  </p>
-                </div>
-                <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Suplementares</p>
-                  <p className="text-xl font-semibold">
-                    {dashboardSummaryQuery.data.suplementares} / {dashboardSummaryQuery.data.total}
-                  </p>
-                  <p className="text-xs text-cyan-400">
-                    {calcPercent(dashboardSummaryQuery.data.suplementares, dashboardSummaryQuery.data.total)}%
+                    {calcPercent(
+                      dashboardSummaryQuery.data.inadimplentes,
+                      dashboardSummaryQuery.data.totalBase
+                    )}%
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-slate-700 p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-200">Gráficos (percentual sobre o total filtrado)</h3>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-slate-700 p-4">
+                  <p className="text-sm font-semibold mb-2">Adimplentes x Total base</p>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData.adimplencia} dataKey="value" nameKey="name" outerRadius={80}>
+                          {pieData.adimplencia.map(slice => (
+                            <Cell key={slice.name} fill={slice.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-                {[
-                  {
-                    label: 'Adimplentes',
-                    value: dashboardSummaryQuery.data.adimplentes,
-                    color: 'bg-emerald-500',
-                  },
-                  {
-                    label: 'Inadimplentes',
-                    value: dashboardSummaryQuery.data.inadimplentes,
-                    color: 'bg-rose-500',
-                  },
-                  {
-                    label: 'Suplementares',
-                    value: dashboardSummaryQuery.data.suplementares,
-                    color: 'bg-cyan-500',
-                  },
-                  {
-                    label: 'PCD = Sim',
-                    value: dashboardSummaryQuery.data.pcdSim,
-                    color: 'bg-violet-500',
-                  },
-                  {
-                    label: 'Masculino',
-                    value: dashboardSummaryQuery.data.masculino,
-                    color: 'bg-sky-500',
-                  },
-                  {
-                    label: 'Feminino',
-                    value: dashboardSummaryQuery.data.feminino,
-                    color: 'bg-pink-500',
-                  },
-                ].map(metric => {
-                  const pct = calcPercent(metric.value, dashboardSummaryQuery.data.total)
-                  return (
-                    <div key={metric.label} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs text-slate-300">
-                        <span>{metric.label}</span>
-                        <span>
-                          {metric.value} / {dashboardSummaryQuery.data.total} ({pct}%)
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
-                        <div className={`h-full ${metric.color}`} style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  )
-                })}
+                <div className="rounded-lg border border-slate-700 p-4">
+                  <p className="text-sm font-semibold mb-2">Sexo (do resultado) x Total base</p>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData.sexo} dataKey="value" nameKey="name" outerRadius={80}>
+                          {pieData.sexo.map(slice => (
+                            <Cell key={slice.name} fill={slice.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 p-4">
+                  <p className="text-sm font-semibold mb-2">PCD (do resultado) x Total base</p>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData.pcd} dataKey="value" nameKey="name" outerRadius={80}>
+                          {pieData.pcd.map(slice => (
+                            <Cell key={slice.name} fill={slice.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 p-4">
+                  <p className="text-sm font-semibold mb-2">Tipo inscrição (resultado)</p>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData.tipoInscricao} dataKey="value" nameKey="name" outerRadius={80}>
+                          {pieData.tipoInscricao.map(slice => (
+                            <Cell key={slice.name} fill={slice.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-700 p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-slate-200">
+                  Seccional: adimplentes / total da seccional (Top 10)
+                </h3>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboardSummaryQuery.data.seccionalRate}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="subsecao" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip
+                        formatter={(value: number, _name, payload: any) => {
+                          if (payload?.dataKey === 'percentual') {
+                            return [`${value}%`, 'Percentual']
+                          }
+                          return [value, payload?.name ?? 'Valor']
+                        }}
+                      />
+                      <Bar dataKey="percentual" fill="#22c55e" name="% Adimplência" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </>
           )}
