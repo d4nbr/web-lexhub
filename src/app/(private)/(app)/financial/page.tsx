@@ -96,7 +96,7 @@ export default function FinancialPage() {
       <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-slate-200 space-y-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
           <div className="space-y-1">
-            <p className="text-xs text-slate-400">Situação Financeira (Todos/Adimplentes/Inadimplentes)</p>
+            <p className="text-xs text-slate-400">Situação Financeira</p>
             <Select
               value={draft.sit_fin_atual ?? 'all'}
               onValueChange={value => updateDraft('sit_fin_atual', value === 'all' ? '' : value)}
@@ -113,7 +113,7 @@ export default function FinancialPage() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs text-slate-400">Tipo Inscrição (Todos/Originária/Suplementar)</p>
+            <p className="text-xs text-slate-400">Tipo Inscrição</p>
             <Select
               value={draft.tipo_inscricao ?? 'all'}
               onValueChange={value => updateDraft('tipo_inscricao', value as FinancialDraftFilters['tipo_inscricao'])}
@@ -130,7 +130,7 @@ export default function FinancialPage() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs text-slate-400">Sexo (Todos/Masculino/Feminino)</p>
+            <p className="text-xs text-slate-400">Sexo</p>
             <Select
               value={draft.sexo ?? 'all'}
               onValueChange={value => updateDraft('sexo', value === 'all' ? '' : value)}
@@ -147,7 +147,7 @@ export default function FinancialPage() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs text-slate-400">Seccional (Todos/São Luís/Codó/Pinheiro/etc)</p>
+            <p className="text-xs text-slate-400">Seccional</p>
             <Select
               value={draft.subsecao ?? 'all'}
               onValueChange={value => updateDraft('subsecao', value === 'all' ? '' : value)}
@@ -167,7 +167,7 @@ export default function FinancialPage() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs text-slate-400">PCD (Todos/Sim/Não)</p>
+            <p className="text-xs text-slate-400">PCD</p>
             <Select
               value={draft.pcd ?? 'all'}
               onValueChange={value => updateDraft('pcd', value === 'all' ? '' : value)}
