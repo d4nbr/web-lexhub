@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   getFinancialLawyers,
   type FinancialLawyersFilters,
@@ -53,6 +61,7 @@ export default function FinancialPage() {
     tipo_inscricao: 'all',
   })
   const [applied, setApplied] = useState<FinancialLawyersFilters | null>(null)
+  const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false)
 
   const lawyersQuery = useQuery({
     queryKey: ['financial', 'lawyers', applied],
@@ -87,6 +96,27 @@ export default function FinancialPage() {
   }
 
   const data = lawyersQuery.data
+
+  const pageSummary = useMemo(() => {
+    const items = data?.items ?? []
+
+    const adimplentes = items.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
+    const inadimplentes = items.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
+    const suplementares = items.filter(item => item.suplementar === 'SIM').length
+    const pcdSim = items.filter(item => item.pcd === 'SIM').length
+    const masculino = items.filter(item => item.sexo === 'M').length
+    const feminino = items.filter(item => item.sexo === 'F').length
+
+    return {
+      pageCount: items.length,
+      adimplentes,
+      inadimplentes,
+      suplementares,
+      pcdSim,
+      masculino,
+      feminino,
+    }
+  }, [data])
 
   return (
     <div className="flex flex-col gap-4">
@@ -187,6 +217,14 @@ export default function FinancialPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={handleSearch}>Buscar / Listar</Button>
 
+          <Button
+            variant="secondary"
+            disabled={applied === null || lawyersQuery.isLoading || !data}
+            onClick={() => setIsDashboardModalOpen(true)}
+          >
+            Gerar Dashboard
+          </Button>
+
           <Select
             value={String(draft.page_size ?? DEFAULT_PAGE_SIZE)}
             onValueChange={value => updateDraft('page_size', Number(value))}
@@ -270,6 +308,58 @@ export default function FinancialPage() {
           </div>
         </div>
       )}
+
+      <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
+        <DialogContent className="border-slate-700 bg-slate-900 text-slate-100 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Dashboard Financeiro (resultado da busca)</DialogTitle>
+            <DialogDescription>
+              Resumo baseado no retorno atual da busca/listagem aplicada.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Total filtrado (todas as páginas)</p>
+              <p className="text-xl font-semibold">{data?.total ?? 0}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Registros na página atual</p>
+              <p className="text-xl font-semibold">{pageSummary.pageCount}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Adimplentes (página atual)</p>
+              <p className="text-xl font-semibold">{pageSummary.adimplentes}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Inadimplentes (página atual)</p>
+              <p className="text-xl font-semibold">{pageSummary.inadimplentes}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Suplementares (página atual)</p>
+              <p className="text-xl font-semibold">{pageSummary.suplementares}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">PCD = Sim (página atual)</p>
+              <p className="text-xl font-semibold">{pageSummary.pcdSim}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Masculino (página atual)</p>
+              <p className="text-xl font-semibold">{pageSummary.masculino}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 p-3">
+              <p className="text-xs text-slate-400">Feminino (página atual)</p>
+              <p className="text-xl font-semibold">{pageSummary.feminino}</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDashboardModalOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
