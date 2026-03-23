@@ -264,7 +264,7 @@ export default function FinancialPage() {
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Situação Financeira</p>
             <Select
-              value={draft.sit_fin_atual ?? 'all'}
+              value={draft.sit_fin_atual || 'all'}
               onValueChange={value => updateDraft('sit_fin_atual', value === 'all' ? '' : value)}
             >
               <SelectTrigger>
@@ -281,7 +281,7 @@ export default function FinancialPage() {
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Tipo Inscrição</p>
             <Select
-              value={draft.tipo_inscricao ?? 'all'}
+              value={draft.tipo_inscricao || 'all'}
               onValueChange={value => updateDraft('tipo_inscricao', value as FinancialDraftFilters['tipo_inscricao'])}
             >
               <SelectTrigger>
@@ -298,7 +298,7 @@ export default function FinancialPage() {
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Sexo</p>
             <Select
-              value={draft.sexo ?? 'all'}
+              value={draft.sexo || 'all'}
               onValueChange={value => updateDraft('sexo', value === 'all' ? '' : value)}
             >
               <SelectTrigger>
@@ -315,7 +315,7 @@ export default function FinancialPage() {
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Seccional</p>
             <Select
-              value={draft.subsecao ?? 'all'}
+              value={draft.subsecao || 'all'}
               onValueChange={value => updateDraft('subsecao', value === 'all' ? '' : value)}
             >
               <SelectTrigger>
@@ -335,7 +335,7 @@ export default function FinancialPage() {
           <div className="space-y-1">
             <p className="text-xs text-slate-400">PCD</p>
             <Select
-              value={draft.pcd ?? 'all'}
+              value={draft.pcd || 'all'}
               onValueChange={value => updateDraft('pcd', value === 'all' ? '' : value)}
             >
               <SelectTrigger>
