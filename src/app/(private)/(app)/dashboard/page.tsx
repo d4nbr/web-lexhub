@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const monthParam = searchParams.get('month')
   const year = Number(yearParam ?? currentYear)
   const month: number | 'all' =
-    monthParam === 'all' ? 'all' : Number(monthParam ?? currentMonth)
+    !monthParam || monthParam === 'all' ? 'all' : Number(monthParam)
   const agentId = searchParams.get('agentId') ?? 'all'
   const tab = (searchParams.get('tab') ?? 'overview') as TabKey
 
@@ -116,7 +116,7 @@ export default function DashboardPage() {
     }
 
     if (!monthParam) {
-      params.set('month', String(currentMonth))
+      params.set('month', 'all')
     }
 
     if (!params.get('tab')) {
