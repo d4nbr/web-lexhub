@@ -137,6 +137,9 @@ export default function FinancialPage() {
 
   const data = lawyersQuery.data
 
+  const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
+  const seccionalChartWidth = Math.max(1200, seccionalData.length * 96)
+
   const pieData = useMemo(() => {
     if (!dashboardSummaryQuery.data) return null
 
@@ -357,7 +360,7 @@ export default function FinancialPage() {
       )}
 
       <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
-        <DialogContent className="border-slate-700 bg-slate-900 text-slate-100 sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[92vw] max-w-[1480px] border-slate-700 bg-slate-900 text-slate-100 max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro (resultado da busca)</DialogTitle>
             <DialogDescription>
@@ -394,7 +397,7 @@ export default function FinancialPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Situação financeira</p>
                   <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
@@ -465,7 +468,7 @@ export default function FinancialPage() {
               </div>
 
               <div className="rounded-lg border border-slate-700 p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-200">Seccional (Top 10)</h3>
+                <h3 className="text-sm font-semibold text-slate-200">Seccional</h3>
                 <p className="text-xs text-slate-400">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
 
                 {dashboardSummaryQuery.isLoading && (
@@ -474,31 +477,40 @@ export default function FinancialPage() {
                   </div>
                 )}
 
-                {!dashboardSummaryQuery.isLoading && !dashboardSummaryQuery.data?.seccionalDistribuicao?.length && (
+                {!dashboardSummaryQuery.isLoading && !seccionalData.length && (
                   <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300">
                     Sem dados de seccional para o filtro atual.
                   </div>
                 )}
 
-                {!!dashboardSummaryQuery.data?.seccionalDistribuicao?.length && (
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={dashboardSummaryQuery.data.seccionalDistribuicao}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="subsecao" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip
-                          formatter={(value: number, _name, payload: any) => {
-                            if (payload?.dataKey === 'percentual') {
-                              const quantidade = payload?.payload?.total ?? 0
-                              return [`${value}% (${quantidade} advogados)`, 'Participação']
-                            }
-                            return [value, payload?.name ?? 'Valor']
-                          }}
-                        />
-                        <Bar dataKey="percentual" fill="#22c55e" name="% no universo atual" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                {!!seccionalData.length && (
+                  <div className="overflow-x-auto pb-2">
+                    <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={seccionalData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                          <XAxis
+                            dataKey="subsecao"
+                            tick={{ fontSize: 11 }}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={90}
+                          />
+                          <YAxis tick={{ fontSize: 11 }} />
+                          <Tooltip
+                            formatter={(value: number, _name, payload: any) => {
+                              if (payload?.dataKey === 'percentual') {
+                                const quantidade = payload?.payload?.total ?? 0
+                                return [`${value}% (${quantidade} advogados)`, 'Participação']
+                              }
+                              return [value, payload?.name ?? 'Valor']
+                            }}
+                          />
+                          <Bar dataKey="percentual" fill="#22c55e" name="% no universo atual" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 )}
               </div>
