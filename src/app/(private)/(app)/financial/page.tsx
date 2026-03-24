@@ -30,7 +30,6 @@ import {
 } from '@/components/ui/dialog'
 import {
   getFinancialLawyers,
-  type FinancialLawyerItem,
   type FinancialLawyersFilters,
 } from '@/api/financial/get-financial-lawyers'
 import {
@@ -94,109 +93,88 @@ function calcPercent(value: number, total: number) {
   return Number(((value / total) * 100).toFixed(2))
 }
 
-function applyFilters(items: FinancialLawyerItem[], filters: FinancialLawyersFilters) {
-  return items.filter(item => {
-    if (filters.sit_fin_atual && item.sit_fin_atual !== filters.sit_fin_atual) return false
-    if (filters.sexo && item.sexo !== filters.sexo) return false
-    if (filters.pcd && item.pcd !== filters.pcd) return false
-    if (filters.suplementar && item.suplementar !== filters.suplementar) return false
-    if (filters.subsecao && item.subsecao !== filters.subsecao) return false
-    return true
-  })
-}
-
-async function fetchAllFinancialLawyers(filters: FinancialLawyersFilters) {
-  const pageSize = 200
-  const first = await getFinancialLawyers({ ...filters, page: 1, page_size: pageSize })
-
-  const allItems: FinancialLawyerItem[] = [...first.items]
-  const totalPages = first.total_pages || 1
-
-  const pages = Array.from({ length: Math.max(totalPages - 1, 0) }, (_, i) => i + 2)
-  const concurrency = 8
-
-  for (let i = 0; i < pages.length; i += concurrency) {
-    const chunk = pages.slice(i, i + concurrency)
-    const results = await Promise.all(
-      chunk.map(page => getFinancialLawyers({ ...filters, page, page_size: pageSize }))
-    )
-
-    results.forEach(result => {
-      allItems.push(...result.items)
-    })
-  }
-
-  return {
-    total: first.total,
-    items: allItems,
-  }
+async function countByFilters(filters: FinancialLawyersFilters) {
+  const response = await getFinancialLawyers({ ...filters, page: 1, page_size: 1 })
+  return response.total
 }
 
 async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
   const { page: _p, page_size: _s, ...f } = filters
 
-  const baseData = await fetchAllFinancialLawyers({})
-  const baseItems = baseData.items
-
-  const totalBase = baseData.total
-  const totalFiltrado = applyFilters(baseItems, f).length
-
-  const universoSexoItems = applyFilters(baseItems, {
+  const filtrosSituacao = {
     sit_fin_atual: f.sit_fin_atual,
-  })
+  }
 
-  const universoPcdItems = applyFilters(baseItems, {
-    sit_fin_atual: f.sit_fin_atual,
+  const filtrosSexo = {
+    ...filtrosSituacao,
     sexo: f.sexo,
-  })
+  }
 
-  const universoTipoItems = applyFilters(baseItems, {
-    sit_fin_atual: f.sit_fin_atual,
-    sexo: f.sexo,
+  const filtrosPcd = {
+    ...filtrosSexo,
     pcd: f.pcd,
-  })
+  }
 
-  const universoSeccionalItems = applyFilters(baseItems, {
-    sit_fin_atual: f.sit_fin_atual,
-    sexo: f.sexo,
-    pcd: f.pcd,
+  const filtrosTipo = {
+    ...filtrosPcd,
     suplementar: f.suplementar,
-  })
+  }
 
-  const adimplentes = baseItems.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
-  const inadimplentes = baseItems.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
+  const [
+    totalBase,
+    totalFiltrado,
+    adimplentes,
+    inadimplentes,
+    universoSexo,
+    masculino,
+    feminino,
+    universoPcd,
+    pcdSim,
+    pcdNao,
+    universoTipo,
+    suplementares,
+    originarias,
+    universoSeccional,
+  ] = await Promise.all([
+    countByFilters({}),
+    countByFilters(f),
+    countByFilters({ sit_fin_atual: 'ADIMPLENTE' }),
+    countByFilters({ sit_fin_atual: 'INADIMPLENTE' }),
+    countByFilters(filtrosSituacao),
+    countByFilters({ ...filtrosSituacao, sexo: 'M' }),
+    countByFilters({ ...filtrosSituacao, sexo: 'F' }),
+    countByFilters(filtrosSexo),
+    countByFilters({ ...filtrosSexo, pcd: 'SIM' }),
+    countByFilters({ ...filtrosSexo, pcd: 'NAO' }),
+    countByFilters(filtrosPcd),
+    countByFilters({ ...filtrosPcd, suplementar: 'SIM' }),
+    countByFilters({ ...filtrosPcd, suplementar: 'NAO' }),
+    countByFilters(filtrosTipo),
+  ])
 
-  const masculino = universoSexoItems.filter(item => item.sexo === 'M').length
-  const feminino = universoSexoItems.filter(item => item.sexo === 'F').length
+  const seccionalCounts = await Promise.all(
+    SUBSECAO_OPTIONS.map(async option => {
+      const total = await countByFilters({ ...filtrosTipo, subsecao: option.value })
+      return {
+        subsecao: option.value,
+        total,
+        percentual: calcPercent(total, universoSeccional),
+      }
+    })
+  )
 
-  const pcdSim = universoPcdItems.filter(item => item.pcd === 'SIM').length
-  const pcdNao = universoPcdItems.filter(item => item.pcd === 'NAO').length
-
-  const suplementares = universoTipoItems.filter(item => item.suplementar === 'SIM').length
-  const originarias = universoTipoItems.filter(item => item.suplementar === 'NAO').length
-
-  const seccionalMap = new Map<string, number>()
-  universoSeccionalItems.forEach(item => {
-    const key = item.subsecao || 'NÃO INFORMADA'
-    seccionalMap.set(key, (seccionalMap.get(key) ?? 0) + 1)
-  })
-
-  const seccionalDistribuicao = Array.from(seccionalMap.entries())
-    .map(([subsecao, total]) => ({
-      subsecao,
-      total,
-      percentual: calcPercent(total, universoSeccionalItems.length),
-    }))
+  const seccionalDistribuicao = seccionalCounts
+    .filter(item => item.total > 0)
     .sort((a, b) => b.total - a.total)
     .slice(0, 10)
 
   return {
     totalBase,
     totalFiltrado,
-    universoSexo: universoSexoItems.length,
-    universoPcd: universoPcdItems.length,
-    universoTipo: universoTipoItems.length,
-    universoSeccional: universoSeccionalItems.length,
+    universoSexo,
+    universoPcd,
+    universoTipo,
+    universoSeccional,
     adimplentes,
     inadimplentes,
     masculino,
