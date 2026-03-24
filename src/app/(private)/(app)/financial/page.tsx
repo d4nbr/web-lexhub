@@ -443,7 +443,6 @@ export default function FinancialPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Situação financeira</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -468,7 +467,6 @@ export default function FinancialPage() {
 
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Sexo</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -493,7 +491,6 @@ export default function FinancialPage() {
 
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">PCD</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -518,7 +515,6 @@ export default function FinancialPage() {
 
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
