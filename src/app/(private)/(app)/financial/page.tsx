@@ -425,48 +425,50 @@ export default function FinancialPage() {
         >
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro</DialogTitle>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button
-                type="button"
-                size="sm"
-                variant={chartVisibility.situacao ? 'default' : 'outline'}
-                onClick={() => toggleChartVisibility('situacao')}
-              >
-                Situação
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={chartVisibility.sexo ? 'default' : 'outline'}
-                onClick={() => toggleChartVisibility('sexo')}
-              >
-                Sexo
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={chartVisibility.pcd ? 'default' : 'outline'}
-                onClick={() => toggleChartVisibility('pcd')}
-              >
-                PCD
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={chartVisibility.tipoInscricao ? 'default' : 'outline'}
-                onClick={() => toggleChartVisibility('tipoInscricao')}
-              >
-                Tipo inscrição
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={chartVisibility.seccional ? 'default' : 'outline'}
-                onClick={() => toggleChartVisibility('seccional')}
-              >
-                Seccional
-              </Button>
-            </div>
+            {isDashboardResultReady && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={chartVisibility.situacao ? 'default' : 'outline'}
+                  onClick={() => toggleChartVisibility('situacao')}
+                >
+                  Situação
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={chartVisibility.sexo ? 'default' : 'outline'}
+                  onClick={() => toggleChartVisibility('sexo')}
+                >
+                  Sexo
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={chartVisibility.pcd ? 'default' : 'outline'}
+                  onClick={() => toggleChartVisibility('pcd')}
+                >
+                  PCD
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={chartVisibility.tipoInscricao ? 'default' : 'outline'}
+                  onClick={() => toggleChartVisibility('tipoInscricao')}
+                >
+                  Tipo inscrição
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={chartVisibility.seccional ? 'default' : 'outline'}
+                  onClick={() => toggleChartVisibility('seccional')}
+                >
+                  Seccional
+                </Button>
+              </div>
+            )}
           </DialogHeader>
 
           {dashboardSummaryQuery.isLoading && <LoadingDashboard />}
