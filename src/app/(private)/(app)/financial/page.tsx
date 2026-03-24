@@ -93,9 +93,24 @@ function calcPercent(value: number, total: number) {
   return Number(((value / total) * 100).toFixed(2))
 }
 
-async function countByFilters(filters: FinancialLawyersFilters) {
-  const response = await getFinancialLawyers({ ...filters, page: 1, page_size: 1 })
-  return response.total
+async function countByFilters(filters: FinancialLawyersFilters, retries = 2): Promise<number> {
+  try {
+    const response = await getFinancialLawyers({ ...filters, page: 1, page_size: 1 })
+    return response.total
+  } catch (error) {
+    if (retries <= 0) throw error
+    await new Promise(resolve => setTimeout(resolve, 350))
+    return countByFilters(filters, retries - 1)
+  }
+}
+
+async function runCountSeries(filtersList: FinancialLawyersFilters[]) {
+  const results: number[] = []
+  for (const filters of filtersList) {
+    const value = await countByFilters(filters)
+    results.push(value)
+  }
+  return results
 }
 
 async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
@@ -135,33 +150,32 @@ async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
     suplementares,
     originarias,
     universoSeccional,
-  ] = await Promise.all([
-    countByFilters({}),
-    countByFilters(f),
-    countByFilters({ sit_fin_atual: 'ADIMPLENTE' }),
-    countByFilters({ sit_fin_atual: 'INADIMPLENTE' }),
-    countByFilters(filtrosSituacao),
-    countByFilters({ ...filtrosSituacao, sexo: 'M' }),
-    countByFilters({ ...filtrosSituacao, sexo: 'F' }),
-    countByFilters(filtrosSexo),
-    countByFilters({ ...filtrosSexo, pcd: 'SIM' }),
-    countByFilters({ ...filtrosSexo, pcd: 'NAO' }),
-    countByFilters(filtrosPcd),
-    countByFilters({ ...filtrosPcd, suplementar: 'SIM' }),
-    countByFilters({ ...filtrosPcd, suplementar: 'NAO' }),
-    countByFilters(filtrosTipo),
+  ] = await runCountSeries([
+    {},
+    f,
+    { sit_fin_atual: 'ADIMPLENTE' },
+    { sit_fin_atual: 'INADIMPLENTE' },
+    filtrosSituacao,
+    { ...filtrosSituacao, sexo: 'M' },
+    { ...filtrosSituacao, sexo: 'F' },
+    filtrosSexo,
+    { ...filtrosSexo, pcd: 'SIM' },
+    { ...filtrosSexo, pcd: 'NAO' },
+    filtrosPcd,
+    { ...filtrosPcd, suplementar: 'SIM' },
+    { ...filtrosPcd, suplementar: 'NAO' },
+    filtrosTipo,
   ])
 
-  const seccionalCounts = await Promise.all(
-    SUBSECAO_OPTIONS.map(async option => {
-      const total = await countByFilters({ ...filtrosTipo, subsecao: option.value })
-      return {
-        subsecao: option.value,
-        total,
-        percentual: calcPercent(total, universoSeccional),
-      }
+  const seccionalCounts = [] as Array<{ subsecao: string; total: number; percentual: number }>
+  for (const option of SUBSECAO_OPTIONS) {
+    const total = await countByFilters({ ...filtrosTipo, subsecao: option.value })
+    seccionalCounts.push({
+      subsecao: option.value,
+      total,
+      percentual: calcPercent(total, universoSeccional),
     })
-  )
+  }
 
   const seccionalDistribuicao = seccionalCounts
     .filter(item => item.total > 0)
