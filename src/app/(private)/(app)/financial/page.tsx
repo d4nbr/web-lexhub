@@ -48,6 +48,7 @@ import {
   XAxis,
   YAxis,
   Cell,
+  Legend,
 } from 'recharts'
 
 const DEFAULT_PAGE_SIZE = 50
@@ -418,6 +419,7 @@ export default function FinancialPage() {
                           ))}
                         </Pie>
                         <Tooltip />
+                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -435,6 +437,7 @@ export default function FinancialPage() {
                           ))}
                         </Pie>
                         <Tooltip />
+                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -452,6 +455,7 @@ export default function FinancialPage() {
                           ))}
                         </Pie>
                         <Tooltip />
+                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -469,6 +473,7 @@ export default function FinancialPage() {
                           ))}
                         </Pie>
                         <Tooltip />
+                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
