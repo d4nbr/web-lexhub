@@ -445,12 +445,12 @@ export default function FinancialPage() {
                   <p className="text-sm font-semibold mb-1">Situação financeira</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
                         <Pie
                           data={pieData.adimplencia}
                           dataKey="value"
                           nameKey="name"
-                          outerRadius={80}
+                          outerRadius={72}
                           label={renderPieValueLabel}
                           labelLine={false}
                         >
@@ -469,12 +469,12 @@ export default function FinancialPage() {
                   <p className="text-sm font-semibold mb-1">Sexo</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
                         <Pie
                           data={pieData.sexo}
                           dataKey="value"
                           nameKey="name"
-                          outerRadius={80}
+                          outerRadius={72}
                           label={renderPieValueLabel}
                           labelLine={false}
                         >
@@ -493,12 +493,12 @@ export default function FinancialPage() {
                   <p className="text-sm font-semibold mb-1">PCD</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
                         <Pie
                           data={pieData.pcd}
                           dataKey="value"
                           nameKey="name"
-                          outerRadius={80}
+                          outerRadius={72}
                           label={renderPieValueLabel}
                           labelLine={false}
                         >
@@ -517,12 +517,12 @@ export default function FinancialPage() {
                   <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
                         <Pie
                           data={pieData.tipoInscricao}
                           dataKey="value"
                           nameKey="name"
-                          outerRadius={80}
+                          outerRadius={72}
                           label={renderPieValueLabel}
                           labelLine={false}
                         >
