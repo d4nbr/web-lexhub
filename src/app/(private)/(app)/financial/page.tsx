@@ -52,18 +52,27 @@ import {
 const DEFAULT_PAGE_SIZE = 50
 
 const SUBSECAO_OPTIONS = [
-  { value: 'SAO LUIS', label: 'São Luís' },
-  { value: 'CODO', label: 'Codó' },
-  { value: 'PINHEIRO', label: 'Pinheiro' },
-  { value: 'CAXIAS', label: 'Caxias' },
-  { value: 'IMPERATRIZ', label: 'Imperatriz' },
-  { value: 'BALSAS', label: 'Balsas' },
-  { value: 'TIMON', label: 'Timon' },
+  { value: 'ACAILANDIA', label: 'Açailândia' },
   { value: 'BACABAL', label: 'Bacabal' },
-  { value: 'SANTA INES', label: 'Santa Inês' },
-  { value: 'PRESIDENTE DUTRA', label: 'Presidente Dutra' },
+  { value: 'BALSAS', label: 'Balsas' },
   { value: 'BARRA DO CORDA', label: 'Barra do Corda' },
+  { value: 'BARREIRINHAS', label: 'Barreirinhas' },
+  { value: 'BURITICUPU', label: 'Buriticupu' },
+  { value: 'CAXIAS', label: 'Caxias' },
+  { value: 'CHAPADINHA', label: 'Chapadinha' },
+  { value: 'CODO', label: 'Codó' },
+  { value: 'COROATA', label: 'Coroatá' },
+  { value: 'ESTREITO', label: 'Estreito' },
+  { value: 'GOVERNADOR NUNES FREIRE', label: 'Governador Nunes Freire' },
   { value: 'GRAJAU', label: 'Grajaú' },
+  { value: 'IMPERATRIZ', label: 'Imperatriz' },
+  { value: 'PEDREIRAS', label: 'Pedreiras' },
+  { value: 'PINHEIRO', label: 'Pinheiro' },
+  { value: 'PRESIDENTE DUTRA', label: 'Presidente Dutra' },
+  { value: 'SANTA INES', label: 'Santa Inês' },
+  { value: 'SAO JOAO DOS PATOS', label: 'São João dos Patos' },
+  { value: 'SAO LUIS', label: 'São Luís' },
+  { value: 'TIMON', label: 'Timon' },
 ]
 
 interface FinancialDraftFilters extends FinancialLawyersFilters {
