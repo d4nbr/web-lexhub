@@ -87,7 +87,7 @@ function calcPercent(value: number, total: number) {
 }
 
 function renderPieValueLabel(props: any) {
-  const { cx, cy, midAngle, outerRadius, percent, value, name } = props
+  const { cx, cy, midAngle, outerRadius, percent, value } = props
   if (!percent || percent < 0.025) return null
 
   const RADIAN = Math.PI / 180
@@ -98,7 +98,7 @@ function renderPieValueLabel(props: any) {
   const ex = mx + (Math.cos(-midAngle * RADIAN) >= 0 ? 16 : -16)
   const ey = my
   const textAnchor = ex > cx ? 'start' : 'end'
-  const pct = `${(percent * 100).toFixed(1)}%`
+  const pct = `${(percent * 100).toFixed(1).replace('.', ',')}%`
 
   return (
     <g>
@@ -113,7 +113,7 @@ function renderPieValueLabel(props: any) {
         fontSize={11}
         fontWeight={600}
       >
-        {`${name}: ${value} (${pct})`}
+        {`${value} (${pct})`}
       </text>
     </g>
   )
