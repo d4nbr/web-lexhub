@@ -137,8 +137,14 @@ export default function FinancialPage() {
 
   const data = lawyersQuery.data
 
+  const isDashboardResultReady = !!dashboardSummaryQuery.data
+  const dashboardLoadingModalClass =
+    'financial-dashboard-loading-modal w-[92vw] max-w-[1480px] border-slate-700 bg-slate-900 text-slate-100 max-h-[88vh] overflow-y-auto'
+  const dashboardResultModalClass =
+    'financial-dashboard-result-modal w-[90vw] max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto'
+
   const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
-  const seccionalChartWidth = Math.max(1200, seccionalData.length * 96)
+  const seccionalChartWidth = Math.max(1300, seccionalData.length * 92)
 
   const pieData = useMemo(() => {
     if (!dashboardSummaryQuery.data) return null
@@ -360,7 +366,9 @@ export default function FinancialPage() {
       )}
 
       <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
-        <DialogContent className="w-[92vw] max-w-[1480px] border-slate-700 bg-slate-900 text-slate-100 max-h-[88vh] overflow-y-auto">
+        <DialogContent
+          className={isDashboardResultReady ? dashboardResultModalClass : dashboardLoadingModalClass}
+        >
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro (resultado da busca)</DialogTitle>
             <DialogDescription>
