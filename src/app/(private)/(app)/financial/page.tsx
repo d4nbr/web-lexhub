@@ -405,10 +405,7 @@ export default function FinancialPage() {
           className={isDashboardResultReady ? dashboardResultModalClass : dashboardLoadingModalClass}
         >
           <DialogHeader>
-            <DialogTitle>Dashboard Financeiro (resultado da busca)</DialogTitle>
-            <DialogDescription>
-              Resumo considerando todo o total filtrado da busca aplicada.
-            </DialogDescription>
+            <DialogTitle>Dashboard Financeiro</DialogTitle>
           </DialogHeader>
 
           {dashboardSummaryQuery.isLoading && <LoadingDashboard />}
