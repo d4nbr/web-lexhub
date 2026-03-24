@@ -81,11 +81,12 @@ interface FinancialDashboardSummary {
   pcdNao: number
   suplementares: number
   originarias: number
-  seccionalDistribuicao: Array<{
-    subsecao: string
-    total: number
-    percentual: number
-  }>
+}
+
+interface SeccionalDistributionItem {
+  subsecao: string
+  total: number
+  percentual: number
 }
 
 function calcPercent(value: number, total: number) {
@@ -167,21 +168,6 @@ async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
     filtrosTipo,
   ])
 
-  const seccionalCounts = [] as Array<{ subsecao: string; total: number; percentual: number }>
-  for (const option of SUBSECAO_OPTIONS) {
-    const total = await countByFilters({ ...filtrosTipo, subsecao: option.value })
-    seccionalCounts.push({
-      subsecao: option.value,
-      total,
-      percentual: calcPercent(total, universoSeccional),
-    })
-  }
-
-  const seccionalDistribuicao = seccionalCounts
-    .filter(item => item.total > 0)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10)
-
   return {
     totalBase,
     totalFiltrado,
@@ -197,8 +183,44 @@ async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
     pcdNao,
     suplementares,
     originarias,
-    seccionalDistribuicao,
   } satisfies FinancialDashboardSummary
+}
+
+async function getSeccionalDistribution(filters: FinancialLawyersFilters, universoSeccional: number) {
+  const { page: _p, page_size: _s, ...f } = filters
+
+  const filtrosTipo = {
+    sit_fin_atual: f.sit_fin_atual,
+    sexo: f.sexo,
+    pcd: f.pcd,
+    suplementar: f.suplementar,
+  }
+
+  if (f.subsecao) {
+    const total = await countByFilters({ ...filtrosTipo, subsecao: f.subsecao })
+    return [
+      {
+        subsecao: f.subsecao,
+        total,
+        percentual: calcPercent(total, universoSeccional),
+      },
+    ] satisfies SeccionalDistributionItem[]
+  }
+
+  const seccionalCounts: SeccionalDistributionItem[] = []
+  for (const option of SUBSECAO_OPTIONS) {
+    const total = await countByFilters({ ...filtrosTipo, subsecao: option.value })
+    seccionalCounts.push({
+      subsecao: option.value,
+      total,
+      percentual: calcPercent(total, universoSeccional),
+    })
+  }
+
+  return seccionalCounts
+    .filter(item => item.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10)
 }
 
 export default function FinancialPage() {
@@ -220,6 +242,17 @@ export default function FinancialPage() {
     queryKey: ['financial', 'dashboard-summary', applied],
     queryFn: () => getFinancialDashboardSummary(applied ?? {}),
     enabled: isDashboardModalOpen && applied !== null,
+  })
+
+  const seccionalQuery = useQuery({
+    queryKey: ['financial', 'dashboard-seccional', applied, dashboardSummaryQuery.data?.universoSeccional],
+    queryFn: () =>
+      getSeccionalDistribution(applied ?? {}, dashboardSummaryQuery.data?.universoSeccional ?? 0),
+    enabled:
+      isDashboardModalOpen &&
+      applied !== null &&
+      !!dashboardSummaryQuery.data &&
+      (dashboardSummaryQuery.data?.universoSeccional ?? 0) > 0,
   })
 
   function handleSearch() {
@@ -586,24 +619,39 @@ export default function FinancialPage() {
               <div className="rounded-lg border border-slate-700 p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-slate-200">Seccional (Top 10)</h3>
                 <p className="text-xs text-slate-400">Base de cálculo: após Situação + Sexo + PCD + Tipo ({dashboardSummaryQuery.data.universoSeccional})</p>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dashboardSummaryQuery.data.seccionalDistribuicao}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="subsecao" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
-                      <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip
-                        formatter={(value: number, _name, payload: any) => {
-                          if (payload?.dataKey === 'percentual') {
-                            return [`${value}%`, 'Participação']
-                          }
-                          return [value, payload?.name ?? 'Valor']
-                        }}
-                      />
-                      <Bar dataKey="percentual" fill="#22c55e" name="% no universo atual" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+
+                {seccionalQuery.isLoading && (
+                  <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
+                    Carregando distribuição por seccional...
+                  </div>
+                )}
+
+                {seccionalQuery.isError && (
+                  <div className="rounded-md border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
+                    Não foi possível carregar a distribuição por seccional agora.
+                  </div>
+                )}
+
+                {!!seccionalQuery.data?.length && (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={seccionalQuery.data}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                        <XAxis dataKey="subsecao" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip
+                          formatter={(value: number, _name, payload: any) => {
+                            if (payload?.dataKey === 'percentual') {
+                              return [`${value}%`, 'Participação']
+                            }
+                            return [value, payload?.name ?? 'Valor']
+                          }}
+                        />
+                        <Bar dataKey="percentual" fill="#22c55e" name="% no universo atual" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             </>
           )}
