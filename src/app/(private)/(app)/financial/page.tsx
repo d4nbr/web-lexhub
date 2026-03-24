@@ -117,64 +117,27 @@ async function runCountSeries(filtersList: FinancialLawyersFilters[]) {
 async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
   const { page: _p, page_size: _s, ...f } = filters
 
-  const filtrosSituacao = {
-    sit_fin_atual: f.sit_fin_atual,
-  }
-
-  const filtrosSexo = {
-    ...filtrosSituacao,
-    sexo: f.sexo,
-  }
-
-  const filtrosPcd = {
-    ...filtrosSexo,
-    pcd: f.pcd,
-  }
-
-  const filtrosTipo = {
-    ...filtrosPcd,
-    suplementar: f.suplementar,
-  }
-
-  const [
-    totalBase,
-    totalFiltrado,
-    adimplentes,
-    inadimplentes,
-    universoSexo,
-    masculino,
-    feminino,
-    universoPcd,
-    pcdSim,
-    pcdNao,
-    universoTipo,
-    suplementares,
-    originarias,
-    universoSeccional,
-  ] = await runCountSeries([
-    {},
-    f,
-    { sit_fin_atual: 'ADIMPLENTE' },
-    { sit_fin_atual: 'INADIMPLENTE' },
-    filtrosSituacao,
-    { ...filtrosSituacao, sexo: 'M' },
-    { ...filtrosSituacao, sexo: 'F' },
-    filtrosSexo,
-    { ...filtrosSexo, pcd: 'SIM' },
-    { ...filtrosSexo, pcd: 'NAO' },
-    filtrosPcd,
-    { ...filtrosPcd, suplementar: 'SIM' },
-    { ...filtrosPcd, suplementar: 'NAO' },
-    filtrosTipo,
-  ])
+  const [totalBase, totalFiltrado, adimplentes, inadimplentes, masculino, feminino, pcdSim, pcdNao, suplementares, originarias] =
+    await runCountSeries([
+      {},
+      f,
+      { ...f, sit_fin_atual: 'ADIMPLENTE' },
+      { ...f, sit_fin_atual: 'INADIMPLENTE' },
+      { ...f, sexo: 'M' },
+      { ...f, sexo: 'F' },
+      { ...f, pcd: 'SIM' },
+      { ...f, pcd: 'NAO' },
+      { ...f, suplementar: 'SIM' },
+      { ...f, suplementar: 'NAO' },
+    ])
 
   return {
     totalBase,
     totalFiltrado,
-    universoSexo,
-    universoPcd,
-    universoTipo,
-    universoSeccional,
+    universoSexo: totalFiltrado,
+    universoPcd: totalFiltrado,
+    universoTipo: totalFiltrado,
+    universoSeccional: totalFiltrado,
     adimplentes,
     inadimplentes,
     masculino,
@@ -189,15 +152,8 @@ async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
 async function getSeccionalDistribution(filters: FinancialLawyersFilters, universoSeccional: number) {
   const { page: _p, page_size: _s, ...f } = filters
 
-  const filtrosTipo = {
-    sit_fin_atual: f.sit_fin_atual,
-    sexo: f.sexo,
-    pcd: f.pcd,
-    suplementar: f.suplementar,
-  }
-
   if (f.subsecao) {
-    const total = await countByFilters({ ...filtrosTipo, subsecao: f.subsecao })
+    const total = await countByFilters({ ...f, subsecao: f.subsecao })
     return [
       {
         subsecao: f.subsecao,
@@ -209,7 +165,7 @@ async function getSeccionalDistribution(filters: FinancialLawyersFilters, univer
 
   const seccionalCounts: SeccionalDistributionItem[] = []
   for (const option of SUBSECAO_OPTIONS) {
-    const total = await countByFilters({ ...filtrosTipo, subsecao: option.value })
+    const total = await countByFilters({ ...f, subsecao: option.value })
     seccionalCounts.push({
       subsecao: option.value,
       total,
@@ -535,21 +491,19 @@ export default function FinancialPage() {
                   <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalFiltrado}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Universo para Sexo</p>
-                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.universoSexo}</p>
+                  <p className="text-xs text-slate-400">Universo único (100%)</p>
+                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalFiltrado}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Universo para PCD / Tipo / Seccional</p>
-                  <p className="text-xl font-semibold">
-                    {dashboardSummaryQuery.data.universoPcd} / {dashboardSummaryQuery.data.universoTipo} / {dashboardSummaryQuery.data.universoSeccional}
-                  </p>
+                  <p className="text-xs text-slate-400">Regra de cálculo</p>
+                  <p className="text-sm font-medium text-slate-200">Todos os gráficos usam o Total final com filtros</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Situação financeira</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total base ({dashboardSummaryQuery.data.totalBase})</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -566,7 +520,7 @@ export default function FinancialPage() {
 
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Sexo</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: após Situação ({dashboardSummaryQuery.data.universoSexo})</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -583,7 +537,7 @@ export default function FinancialPage() {
 
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">PCD</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: após Situação + Sexo ({dashboardSummaryQuery.data.universoPcd})</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -600,7 +554,7 @@ export default function FinancialPage() {
 
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
-                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: após Situação + Sexo + PCD ({dashboardSummaryQuery.data.universoTipo})</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -618,7 +572,7 @@ export default function FinancialPage() {
 
               <div className="rounded-lg border border-slate-700 p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-slate-200">Seccional (Top 10)</h3>
-                <p className="text-xs text-slate-400">Base de cálculo: após Situação + Sexo + PCD + Tipo ({dashboardSummaryQuery.data.universoSeccional})</p>
+                <p className="text-xs text-slate-400">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
 
                 {seccionalQuery.isLoading && (
                   <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
