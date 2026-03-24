@@ -360,7 +360,7 @@ export default function FinancialPage() {
       )}
 
       <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
-        <DialogContent className="w-[96vw] max-w-[1700px] h-[92vh] max-h-[92vh] border-slate-700 bg-slate-900 text-slate-100 overflow-y-auto">
+        <DialogContent className="w-[92vw] max-w-[1480px] border-slate-700 bg-slate-900 text-slate-100 max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro (resultado da busca)</DialogTitle>
             <DialogDescription>
@@ -401,7 +401,7 @@ export default function FinancialPage() {
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Situação financeira</p>
                   <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
-                  <div className="h-44">
+                  <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={pieData.adimplencia} dataKey="value" nameKey="name" outerRadius={80}>
@@ -418,7 +418,7 @@ export default function FinancialPage() {
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Sexo</p>
                   <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
-                  <div className="h-44">
+                  <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={pieData.sexo} dataKey="value" nameKey="name" outerRadius={80}>
@@ -435,7 +435,7 @@ export default function FinancialPage() {
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">PCD</p>
                   <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
-                  <div className="h-44">
+                  <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={pieData.pcd} dataKey="value" nameKey="name" outerRadius={80}>
@@ -452,7 +452,7 @@ export default function FinancialPage() {
                 <div className="rounded-lg border border-slate-700 p-4">
                   <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
                   <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
-                  <div className="h-44">
+                  <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={pieData.tipoInscricao} dataKey="value" nameKey="name" outerRadius={80}>
@@ -485,7 +485,7 @@ export default function FinancialPage() {
 
                 {!!seccionalData.length && (
                   <div className="overflow-x-auto pb-2">
-                    <div style={{ width: `${seccionalChartWidth}px` }} className="h-[260px] min-w-full">
+                    <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={seccionalData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -493,9 +493,9 @@ export default function FinancialPage() {
                             dataKey="subsecao"
                             tick={{ fontSize: 11 }}
                             interval={0}
-                            angle={-35}
+                            angle={-45}
                             textAnchor="end"
-                            height={72}
+                            height={90}
                           />
                           <YAxis tick={{ fontSize: 11 }} />
                           <Tooltip
