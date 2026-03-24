@@ -33,6 +33,10 @@ import {
   type FinancialLawyersFilters,
 } from '@/api/financial/get-financial-lawyers'
 import {
+  getFinancialDashboard,
+  type FinancialDashboardResponse,
+} from '@/api/financial/get-financial-dashboard'
+import {
   Bar,
   BarChart,
   CartesianGrid,
@@ -66,117 +70,9 @@ interface FinancialDraftFilters extends FinancialLawyersFilters {
   tipo_inscricao?: 'all' | 'originaria' | 'suplementar'
 }
 
-interface FinancialDashboardSummary {
-  totalBase: number
-  totalFiltrado: number
-  universoSexo: number
-  universoPcd: number
-  universoTipo: number
-  universoSeccional: number
-  adimplentes: number
-  inadimplentes: number
-  masculino: number
-  feminino: number
-  pcdSim: number
-  pcdNao: number
-  suplementares: number
-  originarias: number
-}
-
-interface SeccionalDistributionItem {
-  subsecao: string
-  total: number
-  percentual: number
-}
-
 function calcPercent(value: number, total: number) {
   if (!total) return 0
   return Number(((value / total) * 100).toFixed(2))
-}
-
-async function countByFilters(filters: FinancialLawyersFilters, retries = 2): Promise<number> {
-  try {
-    const response = await getFinancialLawyers({ ...filters, page: 1, page_size: 1 })
-    return response.total
-  } catch (error) {
-    if (retries <= 0) throw error
-    await new Promise(resolve => setTimeout(resolve, 350))
-    return countByFilters(filters, retries - 1)
-  }
-}
-
-async function runCountSeries(filtersList: FinancialLawyersFilters[]) {
-  const results: number[] = []
-  for (const filters of filtersList) {
-    const value = await countByFilters(filters)
-    results.push(value)
-  }
-  return results
-}
-
-async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
-  const { page: _p, page_size: _s, ...f } = filters
-
-  const [totalBase, totalFiltrado, adimplentes, inadimplentes, masculino, feminino, pcdSim, pcdNao, suplementares, originarias] =
-    await runCountSeries([
-      {},
-      f,
-      { ...f, sit_fin_atual: 'ADIMPLENTE' },
-      { ...f, sit_fin_atual: 'INADIMPLENTE' },
-      { ...f, sexo: 'M' },
-      { ...f, sexo: 'F' },
-      { ...f, pcd: 'SIM' },
-      { ...f, pcd: 'NAO' },
-      { ...f, suplementar: 'SIM' },
-      { ...f, suplementar: 'NAO' },
-    ])
-
-  return {
-    totalBase,
-    totalFiltrado,
-    universoSexo: totalFiltrado,
-    universoPcd: totalFiltrado,
-    universoTipo: totalFiltrado,
-    universoSeccional: totalFiltrado,
-    adimplentes,
-    inadimplentes,
-    masculino,
-    feminino,
-    pcdSim,
-    pcdNao,
-    suplementares,
-    originarias,
-  } satisfies FinancialDashboardSummary
-}
-
-async function getSeccionalDistribution(filters: FinancialLawyersFilters, universoSeccional: number) {
-  const { page: _p, page_size: _s, ...f } = filters
-
-  if (f.subsecao) {
-    const total = await countByFilters({ ...f, subsecao: f.subsecao })
-    return [
-      {
-        subsecao: f.subsecao,
-        total,
-        percentual: calcPercent(total, universoSeccional),
-      },
-    ] satisfies SeccionalDistributionItem[]
-  }
-
-  const seccionalCounts: SeccionalDistributionItem[] = []
-  for (const option of SUBSECAO_OPTIONS) {
-    const total = await countByFilters({ ...f, subsecao: option.value })
-    seccionalCounts.push({
-      subsecao: option.value,
-      total,
-      percentual: calcPercent(total, universoSeccional),
-    })
-  }
-
-  return seccionalCounts
-    .filter(item => item.total > 0)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10)
 }
 
 export default function FinancialPage() {
@@ -194,21 +90,13 @@ export default function FinancialPage() {
     enabled: applied !== null,
   })
 
-  const dashboardSummaryQuery = useQuery({
+  const dashboardSummaryQuery = useQuery<FinancialDashboardResponse>({
     queryKey: ['financial', 'dashboard-summary', applied],
-    queryFn: () => getFinancialDashboardSummary(applied ?? {}),
+    queryFn: () => {
+      const { page: _p, page_size: _s, ...filters } = applied ?? {}
+      return getFinancialDashboard(filters)
+    },
     enabled: isDashboardModalOpen && applied !== null,
-  })
-
-  const seccionalQuery = useQuery({
-    queryKey: ['financial', 'dashboard-seccional', applied, dashboardSummaryQuery.data?.universoSeccional],
-    queryFn: () =>
-      getSeccionalDistribution(applied ?? {}, dashboardSummaryQuery.data?.universoSeccional ?? 0),
-    enabled:
-      isDashboardModalOpen &&
-      applied !== null &&
-      !!dashboardSummaryQuery.data &&
-      (dashboardSummaryQuery.data?.universoSeccional ?? 0) > 0,
   })
 
   function handleSearch() {
@@ -574,22 +462,22 @@ export default function FinancialPage() {
                 <h3 className="text-sm font-semibold text-slate-200">Seccional (Top 10)</h3>
                 <p className="text-xs text-slate-400">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
 
-                {seccionalQuery.isLoading && (
+                {dashboardSummaryQuery.isLoading && (
                   <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
                     Carregando distribuição por seccional...
                   </div>
                 )}
 
-                {seccionalQuery.isError && (
-                  <div className="rounded-md border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
-                    Não foi possível carregar a distribuição por seccional agora.
+                {!dashboardSummaryQuery.isLoading && !dashboardSummaryQuery.data?.seccionalDistribuicao?.length && (
+                  <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300">
+                    Sem dados de seccional para o filtro atual.
                   </div>
                 )}
 
-                {!!seccionalQuery.data?.length && (
+                {!!dashboardSummaryQuery.data?.seccionalDistribuicao?.length && (
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={seccionalQuery.data}>
+                      <BarChart data={dashboardSummaryQuery.data.seccionalDistribuicao}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                         <XAxis dataKey="subsecao" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
                         <YAxis tick={{ fontSize: 11 }} />
