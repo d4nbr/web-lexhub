@@ -366,7 +366,10 @@ export default function FinancialPage() {
 
           {dashboardSummaryQuery.isLoading && (
             <div className="rounded-lg border border-slate-700 p-4 text-slate-300">
-              Gerando dashboard com base em todas as páginas filtradas...
+              <div className="flex items-center gap-3">
+                <span className="inline-block size-4 rounded-full border-2 border-slate-500 border-t-cyan-400 animate-spin" />
+                <span className="animate-pulse">Gerando dashboard com base no total final filtrado...</span>
+              </div>
             </div>
           )}
 
