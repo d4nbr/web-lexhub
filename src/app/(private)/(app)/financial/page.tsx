@@ -484,7 +484,8 @@ export default function FinancialPage() {
                         <Tooltip
                           formatter={(value: number, _name, payload: any) => {
                             if (payload?.dataKey === 'percentual') {
-                              return [`${value}%`, 'Participação']
+                              const quantidade = payload?.payload?.total ?? 0
+                              return [`${value}% (${quantidade} advogados)`, 'Participação']
                             }
                             return [value, payload?.name ?? 'Valor']
                           }}
