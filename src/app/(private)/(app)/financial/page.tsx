@@ -86,6 +86,30 @@ function calcPercent(value: number, total: number) {
   return Number(((value / total) * 100).toFixed(2))
 }
 
+function renderPieValueLabel(props: any) {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value } = props
+  if (!percent || percent < 0.04) return null
+
+  const RADIAN = Math.PI / 180
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#e2e8f0"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      fontSize={11}
+      fontWeight={600}
+    >
+      {value}
+    </text>
+  )
+}
+
 export default function FinancialPage() {
   const [draft, setDraft] = useState<FinancialDraftFilters>({
     page: 1,
@@ -413,7 +437,14 @@ export default function FinancialPage() {
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={pieData.adimplencia} dataKey="value" nameKey="name" outerRadius={80}>
+                        <Pie
+                          data={pieData.adimplencia}
+                          dataKey="value"
+                          nameKey="name"
+                          outerRadius={80}
+                          label={renderPieValueLabel}
+                          labelLine={false}
+                        >
                           {pieData.adimplencia.map(slice => (
                             <Cell key={slice.name} fill={slice.color} />
                           ))}
@@ -431,7 +462,14 @@ export default function FinancialPage() {
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={pieData.sexo} dataKey="value" nameKey="name" outerRadius={80}>
+                        <Pie
+                          data={pieData.sexo}
+                          dataKey="value"
+                          nameKey="name"
+                          outerRadius={80}
+                          label={renderPieValueLabel}
+                          labelLine={false}
+                        >
                           {pieData.sexo.map(slice => (
                             <Cell key={slice.name} fill={slice.color} />
                           ))}
@@ -449,7 +487,14 @@ export default function FinancialPage() {
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={pieData.pcd} dataKey="value" nameKey="name" outerRadius={80}>
+                        <Pie
+                          data={pieData.pcd}
+                          dataKey="value"
+                          nameKey="name"
+                          outerRadius={80}
+                          label={renderPieValueLabel}
+                          labelLine={false}
+                        >
                           {pieData.pcd.map(slice => (
                             <Cell key={slice.name} fill={slice.color} />
                           ))}
@@ -467,7 +512,14 @@ export default function FinancialPage() {
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={pieData.tipoInscricao} dataKey="value" nameKey="name" outerRadius={80}>
+                        <Pie
+                          data={pieData.tipoInscricao}
+                          dataKey="value"
+                          nameKey="name"
+                          outerRadius={80}
+                          label={renderPieValueLabel}
+                          labelLine={false}
+                        >
                           {pieData.tipoInscricao.map(slice => (
                             <Cell key={slice.name} fill={slice.color} />
                           ))}
