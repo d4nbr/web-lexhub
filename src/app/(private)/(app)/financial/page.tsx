@@ -81,6 +81,14 @@ interface FinancialDraftFilters extends FinancialLawyersFilters {
   tipo_inscricao?: 'all' | 'originaria' | 'suplementar'
 }
 
+interface DashboardChartVisibility {
+  situacao: boolean
+  sexo: boolean
+  pcd: boolean
+  tipoInscricao: boolean
+  seccional: boolean
+}
+
 function calcPercent(value: number, total: number) {
   if (!total) return 0
   return Number(((value / total) * 100).toFixed(2))
@@ -127,6 +135,13 @@ export default function FinancialPage() {
   })
   const [applied, setApplied] = useState<FinancialLawyersFilters | null>(null)
   const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false)
+  const [chartVisibility, setChartVisibility] = useState<DashboardChartVisibility>({
+    situacao: true,
+    sexo: true,
+    pcd: true,
+    tipoInscricao: true,
+    seccional: true,
+  })
 
   const lawyersQuery = useQuery({
     queryKey: ['financial', 'lawyers', applied],
@@ -167,6 +182,10 @@ export default function FinancialPage() {
   function handlePageChange(page: number) {
     if (!applied) return
     setApplied({ ...applied, page })
+  }
+
+  function toggleChartVisibility(key: keyof DashboardChartVisibility) {
+    setChartVisibility(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
   const data = lawyersQuery.data
@@ -406,6 +425,48 @@ export default function FinancialPage() {
         >
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro</DialogTitle>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button
+                type="button"
+                size="sm"
+                variant={chartVisibility.situacao ? 'default' : 'outline'}
+                onClick={() => toggleChartVisibility('situacao')}
+              >
+                Situação
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={chartVisibility.sexo ? 'default' : 'outline'}
+                onClick={() => toggleChartVisibility('sexo')}
+              >
+                Sexo
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={chartVisibility.pcd ? 'default' : 'outline'}
+                onClick={() => toggleChartVisibility('pcd')}
+              >
+                PCD
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={chartVisibility.tipoInscricao ? 'default' : 'outline'}
+                onClick={() => toggleChartVisibility('tipoInscricao')}
+              >
+                Tipo inscrição
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={chartVisibility.seccional ? 'default' : 'outline'}
+                onClick={() => toggleChartVisibility('seccional')}
+              >
+                Seccional
+              </Button>
+            </div>
           </DialogHeader>
 
           {dashboardSummaryQuery.isLoading && <LoadingDashboard />}
@@ -438,156 +499,166 @@ export default function FinancialPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-1">Situação financeira</p>
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
-                        <Pie
-                          data={pieData.adimplencia}
-                          dataKey="value"
-                          nameKey="name"
-                          outerRadius={72}
-                          label={renderPieValueLabel}
-                          labelLine={false}
-                        >
-                          {pieData.adimplencia.map(slice => (
-                            <Cell key={slice.name} fill={slice.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-1">Sexo</p>
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
-                        <Pie
-                          data={pieData.sexo}
-                          dataKey="value"
-                          nameKey="name"
-                          outerRadius={72}
-                          label={renderPieValueLabel}
-                          labelLine={false}
-                        >
-                          {pieData.sexo.map(slice => (
-                            <Cell key={slice.name} fill={slice.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-1">PCD</p>
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
-                        <Pie
-                          data={pieData.pcd}
-                          dataKey="value"
-                          nameKey="name"
-                          outerRadius={72}
-                          label={renderPieValueLabel}
-                          labelLine={false}
-                        >
-                          {pieData.pcd.map(slice => (
-                            <Cell key={slice.name} fill={slice.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
-                        <Pie
-                          data={pieData.tipoInscricao}
-                          dataKey="value"
-                          nameKey="name"
-                          outerRadius={72}
-                          label={renderPieValueLabel}
-                          labelLine={false}
-                        >
-                          {pieData.tipoInscricao.map(slice => (
-                            <Cell key={slice.name} fill={slice.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-slate-700 p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-200">Seccional</h3>
-                <p className="text-xs text-slate-400">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
-
-                {dashboardSummaryQuery.isLoading && (
-                  <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
-                    Carregando distribuição por seccional...
-                  </div>
-                )}
-
-                {!dashboardSummaryQuery.isLoading && !seccionalData.length && (
-                  <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300">
-                    Sem dados de seccional para o filtro atual.
-                  </div>
-                )}
-
-                {!!seccionalData.length && (
-                  <div className="overflow-x-auto pb-2">
-                    <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
+                {chartVisibility.situacao && (
+                  <div className="rounded-lg border border-slate-700 p-4">
+                    <p className="text-sm font-semibold mb-1">Situação financeira</p>
+                    <div className="h-56">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={seccionalData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                          <XAxis
-                            dataKey="subsecao"
-                            tick={{ fontSize: 10 }}
-                            interval={0}
-                            angle={-55}
-                            textAnchor="end"
-                            height={102}
-                          />
-                          <YAxis tick={{ fontSize: 11 }} />
-                          <Tooltip
-                            formatter={(value: number, _name, payload: any) => {
-                              if (payload?.dataKey === 'percentual') {
-                                const quantidade = payload?.payload?.total ?? 0
-                                return [`${value}% (${quantidade} advogados)`, 'Participação']
-                              }
-                              return [value, payload?.name ?? 'Valor']
-                            }}
-                          />
-                          <Bar
-                            dataKey="percentual"
-                            fill="#22c55e"
-                            name="% no universo atual"
-                            barSize={seccionalBarSize}
-                            minPointSize={2}
-                          />
-                        </BarChart>
+                        <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
+                          <Pie
+                            data={pieData.adimplencia}
+                            dataKey="value"
+                            nameKey="name"
+                            outerRadius={72}
+                            label={renderPieValueLabel}
+                            labelLine={false}
+                          >
+                            {pieData.adimplencia.map(slice => (
+                              <Cell key={slice.name} fill={slice.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {chartVisibility.sexo && (
+                  <div className="rounded-lg border border-slate-700 p-4">
+                    <p className="text-sm font-semibold mb-1">Sexo</p>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
+                          <Pie
+                            data={pieData.sexo}
+                            dataKey="value"
+                            nameKey="name"
+                            outerRadius={72}
+                            label={renderPieValueLabel}
+                            labelLine={false}
+                          >
+                            {pieData.sexo.map(slice => (
+                              <Cell key={slice.name} fill={slice.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {chartVisibility.pcd && (
+                  <div className="rounded-lg border border-slate-700 p-4">
+                    <p className="text-sm font-semibold mb-1">PCD</p>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
+                          <Pie
+                            data={pieData.pcd}
+                            dataKey="value"
+                            nameKey="name"
+                            outerRadius={72}
+                            label={renderPieValueLabel}
+                            labelLine={false}
+                          >
+                            {pieData.pcd.map(slice => (
+                              <Cell key={slice.name} fill={slice.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {chartVisibility.tipoInscricao && (
+                  <div className="rounded-lg border border-slate-700 p-4">
+                    <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart margin={{ top: 8, right: 36, bottom: 8, left: 36 }}>
+                          <Pie
+                            data={pieData.tipoInscricao}
+                            dataKey="value"
+                            nameKey="name"
+                            outerRadius={72}
+                            label={renderPieValueLabel}
+                            labelLine={false}
+                          >
+                            {pieData.tipoInscricao.map(slice => (
+                              <Cell key={slice.name} fill={slice.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                        </PieChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
                 )}
               </div>
+
+              {chartVisibility.seccional && (
+                <div className="rounded-lg border border-slate-700 p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-200">Seccional</h3>
+                  <p className="text-xs text-slate-400">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
+
+                  {dashboardSummaryQuery.isLoading && (
+                    <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
+                      Carregando distribuição por seccional...
+                    </div>
+                  )}
+
+                  {!dashboardSummaryQuery.isLoading && !seccionalData.length && (
+                    <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300">
+                      Sem dados de seccional para o filtro atual.
+                    </div>
+                  )}
+
+                  {!!seccionalData.length && (
+                    <div className="overflow-x-auto pb-2">
+                      <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={seccionalData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <XAxis
+                              dataKey="subsecao"
+                              tick={{ fontSize: 10 }}
+                              interval={0}
+                              angle={-55}
+                              textAnchor="end"
+                              height={102}
+                            />
+                            <YAxis tick={{ fontSize: 11 }} />
+                            <Tooltip
+                              formatter={(value: number, _name, payload: any) => {
+                                if (payload?.dataKey === 'percentual') {
+                                  const quantidade = payload?.payload?.total ?? 0
+                                  return [`${value}% (${quantidade} advogados)`, 'Participação']
+                                }
+                                return [value, payload?.name ?? 'Valor']
+                              }}
+                            />
+                            <Bar
+                              dataKey="percentual"
+                              fill="#22c55e"
+                              name="% no universo atual"
+                              barSize={seccionalBarSize}
+                              minPointSize={2}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
