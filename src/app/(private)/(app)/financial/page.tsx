@@ -87,6 +87,7 @@ interface DashboardChartVisibility {
   pcd: boolean
   tipoInscricao: boolean
   seccional: boolean
+  seccionalComparativo: boolean
 }
 
 function calcPercent(value: number, total: number) {
@@ -141,6 +142,7 @@ export default function FinancialPage() {
     pcd: true,
     tipoInscricao: true,
     seccional: true,
+    seccionalComparativo: true,
   })
 
   const lawyersQuery = useQuery({
@@ -199,6 +201,11 @@ export default function FinancialPage() {
   const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
   const seccionalChartWidth = Math.max(1300, seccionalData.length * 64)
   const seccionalBarSize = seccionalData.length > 16 ? 12 : seccionalData.length > 10 ? 16 : 22
+
+  const seccionalComparativoData = dashboardSummaryQuery.data?.seccionalComparativo ?? []
+  const seccionalComparativoWidth = Math.max(1300, seccionalComparativoData.length * 64)
+  const seccionalComparativoBarSize =
+    seccionalComparativoData.length > 16 ? 8 : seccionalComparativoData.length > 10 ? 10 : 14
 
   const pieData = useMemo(() => {
     if (!dashboardSummaryQuery.data) return null
@@ -467,6 +474,14 @@ export default function FinancialPage() {
                 >
                   Seccional
                 </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={chartVisibility.seccionalComparativo ? 'default' : 'outline'}
+                  onClick={() => toggleChartVisibility('seccionalComparativo')}
+                >
+                  Adimpl x Inadimpl
+                </Button>
               </div>
             )}
           </DialogHeader>
@@ -652,6 +667,75 @@ export default function FinancialPage() {
                               fill="#22c55e"
                               name="% no universo atual"
                               barSize={seccionalBarSize}
+                              minPointSize={2}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {chartVisibility.seccionalComparativo && (
+                <div className="rounded-lg border border-slate-700 p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-200">Adimplentes x Inadimplentes por Seccional</h3>
+
+                  {dashboardSummaryQuery.isLoading && (
+                    <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
+                      Carregando comparativo por seccional...
+                    </div>
+                  )}
+
+                  {!dashboardSummaryQuery.isLoading && !seccionalComparativoData.length && (
+                    <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300">
+                      Sem dados comparativos de seccional para o filtro atual.
+                    </div>
+                  )}
+
+                  {!!seccionalComparativoData.length && (
+                    <div className="overflow-x-auto pb-2">
+                      <div style={{ width: `${seccionalComparativoWidth}px` }} className="h-[360px] min-w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={seccionalComparativoData} barGap={4}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <XAxis
+                              dataKey="subsecao"
+                              tick={{ fontSize: 10 }}
+                              interval={0}
+                              angle={-55}
+                              textAnchor="end"
+                              height={104}
+                            />
+                            <YAxis tick={{ fontSize: 11 }} />
+                            <Tooltip
+                              formatter={(value: number, name: string, payload: any) => {
+                                if (name === 'Adimplentes') {
+                                  const total = payload?.payload?.total ?? 0
+                                  const pctVal = total ? ((value / total) * 100).toFixed(2) : '0.00'
+                                  return [`${value} (${pctVal}%)`, 'Adimplentes']
+                                }
+                                if (name === 'Inadimplentes') {
+                                  const total = payload?.payload?.total ?? 0
+                                  const pctVal = total ? ((value / total) * 100).toFixed(2) : '0.00'
+                                  return [`${value} (${pctVal}%)`, 'Inadimplentes']
+                                }
+                                return [value, name]
+                              }}
+                            />
+                            <Legend verticalAlign="top" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                            <Bar
+                              dataKey="adimplentes"
+                              fill="#22c55e"
+                              name="Adimplentes"
+                              barSize={seccionalComparativoBarSize}
+                              minPointSize={2}
+                            />
+                            <Bar
+                              dataKey="inadimplentes"
+                              fill="#ef4444"
+                              name="Inadimplentes"
+                              barSize={seccionalComparativoBarSize}
                               minPointSize={2}
                             />
                           </BarChart>

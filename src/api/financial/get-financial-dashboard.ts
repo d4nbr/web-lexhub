@@ -4,6 +4,15 @@ export interface FinancialSeccionalDistributionItem {
   percentual: number
 }
 
+export interface FinancialSeccionalComparativoItem {
+  subsecao: string
+  adimplentes: number
+  inadimplentes: number
+  total: number
+  percentual_adimplentes?: number
+  percentual_inadimplentes?: number
+}
+
 export interface FinancialDashboardResponse {
   totalBase: number
   totalFiltrado: number
@@ -20,6 +29,7 @@ export interface FinancialDashboardResponse {
   suplementares: number
   originarias: number
   seccionalDistribuicao?: FinancialSeccionalDistributionItem[]
+  seccionalComparativo?: FinancialSeccionalComparativoItem[]
 }
 
 interface FinancialDashboardFilters {
