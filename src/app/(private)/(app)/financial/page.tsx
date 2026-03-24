@@ -70,17 +70,21 @@ interface FinancialDraftFilters extends FinancialLawyersFilters {
 interface FinancialDashboardSummary {
   totalBase: number
   totalFiltrado: number
+  universoSexo: number
+  universoPcd: number
+  universoTipo: number
+  universoSeccional: number
   adimplentes: number
   inadimplentes: number
-  suplementares: number
-  originarias: number
-  pcdSim: number
   masculino: number
   feminino: number
-  seccionalRate: Array<{
+  pcdSim: number
+  pcdNao: number
+  suplementares: number
+  originarias: number
+  seccionalDistribuicao: Array<{
     subsecao: string
-    adimplentes: number
-    totalSeccional: number
+    total: number
     percentual: number
   }>
 }
@@ -88,6 +92,17 @@ interface FinancialDashboardSummary {
 function calcPercent(value: number, total: number) {
   if (!total) return 0
   return Number(((value / total) * 100).toFixed(2))
+}
+
+function applyFilters(items: FinancialLawyerItem[], filters: FinancialLawyersFilters) {
+  return items.filter(item => {
+    if (filters.sit_fin_atual && item.sit_fin_atual !== filters.sit_fin_atual) return false
+    if (filters.sexo && item.sexo !== filters.sexo) return false
+    if (filters.pcd && item.pcd !== filters.pcd) return false
+    if (filters.suplementar && item.suplementar !== filters.suplementar) return false
+    if (filters.subsecao && item.subsecao !== filters.subsecao) return false
+    return true
+  })
 }
 
 async function fetchAllFinancialLawyers(filters: FinancialLawyersFilters) {
@@ -118,65 +133,79 @@ async function fetchAllFinancialLawyers(filters: FinancialLawyersFilters) {
 }
 
 async function getFinancialDashboardSummary(filters: FinancialLawyersFilters) {
-  const { page: _p, page_size: _s, ...filterWithoutPagination } = filters
+  const { page: _p, page_size: _s, ...f } = filters
 
-  const [baseData, filteredData] = await Promise.all([
-    fetchAllFinancialLawyers({}),
-    fetchAllFinancialLawyers(filterWithoutPagination),
-  ])
-
+  const baseData = await fetchAllFinancialLawyers({})
   const baseItems = baseData.items
-  const filteredItems = filteredData.items
 
   const totalBase = baseData.total
-  const totalFiltrado = filteredData.total
+  const totalFiltrado = applyFilters(baseItems, f).length
 
-  const adimplentes = filteredItems.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
-  const inadimplentes = filteredItems.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
-  const suplementares = filteredItems.filter(item => item.suplementar === 'SIM').length
-  const originarias = filteredItems.filter(item => item.suplementar === 'NAO').length
-  const pcdSim = filteredItems.filter(item => item.pcd === 'SIM').length
-  const masculino = filteredItems.filter(item => item.sexo === 'M').length
-  const feminino = filteredItems.filter(item => item.sexo === 'F').length
-
-  const baseBySubsecao = new Map<string, number>()
-  baseItems.forEach(item => {
-    const key = item.subsecao || 'NÃO INFORMADA'
-    baseBySubsecao.set(key, (baseBySubsecao.get(key) ?? 0) + 1)
+  const universoSexoItems = applyFilters(baseItems, {
+    sit_fin_atual: f.sit_fin_atual,
   })
 
-  const adimplentesBySubsecao = new Map<string, number>()
-  filteredItems
-    .filter(item => item.sit_fin_atual === 'ADIMPLENTE')
-    .forEach(item => {
-      const key = item.subsecao || 'NÃO INFORMADA'
-      adimplentesBySubsecao.set(key, (adimplentesBySubsecao.get(key) ?? 0) + 1)
-    })
+  const universoPcdItems = applyFilters(baseItems, {
+    sit_fin_atual: f.sit_fin_atual,
+    sexo: f.sexo,
+  })
 
-  const seccionalRate = Array.from(adimplentesBySubsecao.entries())
-    .map(([subsecao, adimplentesCount]) => {
-      const totalSeccional = baseBySubsecao.get(subsecao) ?? 0
-      return {
-        subsecao,
-        adimplentes: adimplentesCount,
-        totalSeccional,
-        percentual: calcPercent(adimplentesCount, totalSeccional),
-      }
-    })
-    .sort((a, b) => b.percentual - a.percentual)
+  const universoTipoItems = applyFilters(baseItems, {
+    sit_fin_atual: f.sit_fin_atual,
+    sexo: f.sexo,
+    pcd: f.pcd,
+  })
+
+  const universoSeccionalItems = applyFilters(baseItems, {
+    sit_fin_atual: f.sit_fin_atual,
+    sexo: f.sexo,
+    pcd: f.pcd,
+    suplementar: f.suplementar,
+  })
+
+  const adimplentes = baseItems.filter(item => item.sit_fin_atual === 'ADIMPLENTE').length
+  const inadimplentes = baseItems.filter(item => item.sit_fin_atual === 'INADIMPLENTE').length
+
+  const masculino = universoSexoItems.filter(item => item.sexo === 'M').length
+  const feminino = universoSexoItems.filter(item => item.sexo === 'F').length
+
+  const pcdSim = universoPcdItems.filter(item => item.pcd === 'SIM').length
+  const pcdNao = universoPcdItems.filter(item => item.pcd === 'NAO').length
+
+  const suplementares = universoTipoItems.filter(item => item.suplementar === 'SIM').length
+  const originarias = universoTipoItems.filter(item => item.suplementar === 'NAO').length
+
+  const seccionalMap = new Map<string, number>()
+  universoSeccionalItems.forEach(item => {
+    const key = item.subsecao || 'NÃO INFORMADA'
+    seccionalMap.set(key, (seccionalMap.get(key) ?? 0) + 1)
+  })
+
+  const seccionalDistribuicao = Array.from(seccionalMap.entries())
+    .map(([subsecao, total]) => ({
+      subsecao,
+      total,
+      percentual: calcPercent(total, universoSeccionalItems.length),
+    }))
+    .sort((a, b) => b.total - a.total)
     .slice(0, 10)
 
   return {
     totalBase,
     totalFiltrado,
+    universoSexo: universoSexoItems.length,
+    universoPcd: universoPcdItems.length,
+    universoTipo: universoTipoItems.length,
+    universoSeccional: universoSeccionalItems.length,
     adimplentes,
     inadimplentes,
-    suplementares,
-    originarias,
-    pcdSim,
     masculino,
     feminino,
-    seccionalRate,
+    pcdSim,
+    pcdNao,
+    suplementares,
+    originarias,
+    seccionalDistribuicao,
   } satisfies FinancialDashboardSummary
 }
 
@@ -237,7 +266,7 @@ export default function FinancialPage() {
     return {
       adimplencia: [
         { name: 'Adimplentes', value: d.adimplentes, color: '#22c55e' },
-        { name: 'Restante base', value: Math.max(d.totalBase - d.adimplentes, 0), color: '#334155' },
+        { name: 'Inadimplentes', value: d.inadimplentes, color: '#ef4444' },
       ],
       sexo: [
         { name: 'Masculino', value: d.masculino, color: '#38bdf8' },
@@ -245,7 +274,7 @@ export default function FinancialPage() {
       ],
       pcd: [
         { name: 'PCD Sim', value: d.pcdSim, color: '#a78bfa' },
-        { name: 'Restante base', value: Math.max(d.totalBase - d.pcdSim, 0), color: '#334155' },
+        { name: 'PCD Não', value: d.pcdNao, color: '#334155' },
       ],
       tipoInscricao: [
         { name: 'Suplementar', value: d.suplementares, color: '#06b6d4' },
@@ -477,38 +506,25 @@ export default function FinancialPage() {
                   <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalBase}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Total do filtro aplicado</p>
+                  <p className="text-xs text-slate-400">Total final com filtros</p>
                   <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalFiltrado}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Adimplentes / Total base</p>
-                  <p className="text-xl font-semibold">
-                    {dashboardSummaryQuery.data.adimplentes} / {dashboardSummaryQuery.data.totalBase}
-                  </p>
-                  <p className="text-xs text-emerald-400">
-                    {calcPercent(
-                      dashboardSummaryQuery.data.adimplentes,
-                      dashboardSummaryQuery.data.totalBase
-                    )}%
-                  </p>
+                  <p className="text-xs text-slate-400">Universo para Sexo</p>
+                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.universoSexo}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Inadimplentes / Total base</p>
+                  <p className="text-xs text-slate-400">Universo para PCD / Tipo / Seccional</p>
                   <p className="text-xl font-semibold">
-                    {dashboardSummaryQuery.data.inadimplentes} / {dashboardSummaryQuery.data.totalBase}
-                  </p>
-                  <p className="text-xs text-rose-400">
-                    {calcPercent(
-                      dashboardSummaryQuery.data.inadimplentes,
-                      dashboardSummaryQuery.data.totalBase
-                    )}%
+                    {dashboardSummaryQuery.data.universoPcd} / {dashboardSummaryQuery.data.universoTipo} / {dashboardSummaryQuery.data.universoSeccional}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-2">Adimplentes x Total base</p>
+                  <p className="text-sm font-semibold mb-1">Situação financeira</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: Total base ({dashboardSummaryQuery.data.totalBase})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -524,7 +540,8 @@ export default function FinancialPage() {
                 </div>
 
                 <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-2">Sexo (do resultado) x Total base</p>
+                  <p className="text-sm font-semibold mb-1">Sexo</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: após Situação ({dashboardSummaryQuery.data.universoSexo})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -540,7 +557,8 @@ export default function FinancialPage() {
                 </div>
 
                 <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-2">PCD (do resultado) x Total base</p>
+                  <p className="text-sm font-semibold mb-1">PCD</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: após Situação + Sexo ({dashboardSummaryQuery.data.universoPcd})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -556,7 +574,8 @@ export default function FinancialPage() {
                 </div>
 
                 <div className="rounded-lg border border-slate-700 p-4">
-                  <p className="text-sm font-semibold mb-2">Tipo inscrição (resultado)</p>
+                  <p className="text-sm font-semibold mb-1">Tipo inscrição</p>
+                  <p className="text-xs text-slate-400 mb-2">Base de cálculo: após Situação + Sexo + PCD ({dashboardSummaryQuery.data.universoTipo})</p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -573,24 +592,23 @@ export default function FinancialPage() {
               </div>
 
               <div className="rounded-lg border border-slate-700 p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-200">
-                  Seccional: adimplentes / total da seccional (Top 10)
-                </h3>
+                <h3 className="text-sm font-semibold text-slate-200">Seccional (Top 10)</h3>
+                <p className="text-xs text-slate-400">Base de cálculo: após Situação + Sexo + PCD + Tipo ({dashboardSummaryQuery.data.universoSeccional})</p>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dashboardSummaryQuery.data.seccionalRate}>
+                    <BarChart data={dashboardSummaryQuery.data.seccionalDistribuicao}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                       <XAxis dataKey="subsecao" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip
                         formatter={(value: number, _name, payload: any) => {
                           if (payload?.dataKey === 'percentual') {
-                            return [`${value}%`, 'Percentual']
+                            return [`${value}%`, 'Participação']
                           }
                           return [value, payload?.name ?? 'Valor']
                         }}
                       />
-                      <Bar dataKey="percentual" fill="#22c55e" name="% Adimplência" />
+                      <Bar dataKey="percentual" fill="#22c55e" name="% no universo atual" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
