@@ -36,6 +36,7 @@ import {
   getFinancialDashboard,
   type FinancialDashboardResponse,
 } from '@/api/financial/get-financial-dashboard'
+import { LoadingDashboard } from './components/loading-dashboard'
 import {
   Bar,
   BarChart,
@@ -364,14 +365,7 @@ export default function FinancialPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {dashboardSummaryQuery.isLoading && (
-            <div className="rounded-lg border border-slate-700 p-4 text-slate-300">
-              <div className="flex items-center gap-3">
-                <span className="inline-block size-4 rounded-full border-2 border-slate-500 border-t-cyan-400 animate-spin" />
-                <span className="animate-pulse">Gerando dashboard com base no total final filtrado...</span>
-              </div>
-            </div>
-          )}
+          {dashboardSummaryQuery.isLoading && <LoadingDashboard />}
 
           {dashboardSummaryQuery.isError && (
             <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-200">
