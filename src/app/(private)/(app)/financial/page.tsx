@@ -87,26 +87,35 @@ function calcPercent(value: number, total: number) {
 }
 
 function renderPieValueLabel(props: any) {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value } = props
-  if (!percent || percent < 0.04) return null
+  const { cx, cy, midAngle, outerRadius, percent, value, name } = props
+  if (!percent || percent < 0.025) return null
 
   const RADIAN = Math.PI / 180
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.55
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  const sx = cx + (outerRadius + 4) * Math.cos(-midAngle * RADIAN)
+  const sy = cy + (outerRadius + 4) * Math.sin(-midAngle * RADIAN)
+  const mx = cx + (outerRadius + 16) * Math.cos(-midAngle * RADIAN)
+  const my = cy + (outerRadius + 16) * Math.sin(-midAngle * RADIAN)
+  const ex = mx + (Math.cos(-midAngle * RADIAN) >= 0 ? 16 : -16)
+  const ey = my
+  const textAnchor = ex > cx ? 'start' : 'end'
+  const pct = `${(percent * 100).toFixed(1)}%`
 
   return (
-    <text
-      x={x}
-      y={y}
-      fill="#e2e8f0"
-      textAnchor={x > cx ? 'start' : 'end'}
-      dominantBaseline="central"
-      fontSize={11}
-      fontWeight={600}
-    >
-      {value}
-    </text>
+    <g>
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#94a3b8" fill="none" strokeWidth={1} />
+      <circle cx={ex} cy={ey} r={2} fill="#94a3b8" />
+      <text
+        x={ex + (textAnchor === 'start' ? 5 : -5)}
+        y={ey}
+        textAnchor={textAnchor}
+        dominantBaseline="central"
+        fill="#e2e8f0"
+        fontSize={11}
+        fontWeight={600}
+      >
+        {`${name}: ${value} (${pct})`}
+      </text>
+    </g>
   )
 }
 
