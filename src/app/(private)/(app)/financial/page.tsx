@@ -141,7 +141,7 @@ export default function FinancialPage() {
   const dashboardLoadingModalClass =
     'financial-dashboard-loading-modal w-[92vw] max-w-[1480px] border-slate-700 bg-slate-900 text-slate-100 max-h-[88vh] overflow-y-auto'
   const dashboardResultModalClass =
-    'financial-dashboard-result-modal w-[90vw] max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto'
+    'financial-dashboard-result-modal !w-[92vw] sm:!w-[92vw] !max-w-[92vw] xl:!max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto'
 
   const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
   const seccionalChartWidth = Math.max(1300, seccionalData.length * 92)
