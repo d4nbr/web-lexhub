@@ -178,7 +178,8 @@ export default function FinancialPage() {
     'financial-dashboard-result-modal !w-[92vw] sm:!w-[92vw] !max-w-[92vw] xl:!max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto'
 
   const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
-  const seccionalChartWidth = Math.max(1300, seccionalData.length * 92)
+  const seccionalChartWidth = Math.max(1300, seccionalData.length * 64)
+  const seccionalBarSize = seccionalData.length > 16 ? 12 : seccionalData.length > 10 ? 16 : 22
 
   const pieData = useMemo(() => {
     if (!dashboardSummaryQuery.data) return null
@@ -565,11 +566,11 @@ export default function FinancialPage() {
                           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                           <XAxis
                             dataKey="subsecao"
-                            tick={{ fontSize: 11 }}
+                            tick={{ fontSize: 10 }}
                             interval={0}
-                            angle={-45}
+                            angle={-55}
                             textAnchor="end"
-                            height={90}
+                            height={102}
                           />
                           <YAxis tick={{ fontSize: 11 }} />
                           <Tooltip
@@ -581,7 +582,13 @@ export default function FinancialPage() {
                               return [value, payload?.name ?? 'Valor']
                             }}
                           />
-                          <Bar dataKey="percentual" fill="#22c55e" name="% no universo atual" />
+                          <Bar
+                            dataKey="percentual"
+                            fill="#22c55e"
+                            name="% no universo atual"
+                            barSize={seccionalBarSize}
+                            minPointSize={2}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
