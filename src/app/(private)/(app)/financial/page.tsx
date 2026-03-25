@@ -913,24 +913,28 @@ export default function FinancialPage() {
             margin: 10mm;
           }
 
-          body.printing-financial-dashboard * {
-            visibility: hidden !important;
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
           }
 
-          body.printing-financial-dashboard .financial-print-root,
-          body.printing-financial-dashboard .financial-print-root * {
-            visibility: visible !important;
+          body.printing-financial-dashboard > *:not(.financial-print-root) {
+            display: none !important;
           }
 
           body.printing-financial-dashboard .financial-print-root {
+            display: block !important;
             position: static !important;
             inset: auto !important;
-            background: #ffffff !important;
+            background: #020617 !important;
             padding: 0 !important;
             margin: 0 !important;
             overflow: visible !important;
             z-index: auto !important;
-            page-break-before: auto !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
 
           body.printing-financial-dashboard .financial-print-clone {
@@ -939,7 +943,8 @@ export default function FinancialPage() {
             margin: 0 !important;
             padding: 0 !important;
             break-inside: auto;
-            color: #111827 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
 
           body.printing-financial-dashboard .financial-print-clone [data-export-block='true'] {
@@ -956,21 +961,6 @@ export default function FinancialPage() {
             width: 100% !important;
             min-width: 0 !important;
             max-width: 100% !important;
-          }
-
-          body.printing-financial-dashboard .financial-print-clone .recharts-text,
-          body.printing-financial-dashboard .financial-print-clone .recharts-cartesian-axis-tick-value,
-          body.printing-financial-dashboard .financial-print-clone .recharts-legend-item-text,
-          body.printing-financial-dashboard .financial-print-clone .recharts-label {
-            fill: #111827 !important;
-            color: #111827 !important;
-          }
-
-          body.printing-financial-dashboard .financial-print-clone .recharts-label-line,
-          body.printing-financial-dashboard .financial-print-clone path[stroke='#94a3b8'],
-          body.printing-financial-dashboard .financial-print-clone circle[fill='#94a3b8'] {
-            stroke: #374151 !important;
-            fill: #374151 !important;
           }
         }
       `}</style>
