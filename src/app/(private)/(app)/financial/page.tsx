@@ -668,7 +668,11 @@ export default function FinancialPage() {
                     <div className="overflow-x-auto pb-2">
                       <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={seccionalData} barCategoryGap="8%">
+                          <BarChart
+                            data={seccionalData}
+                            barCategoryGap="8%"
+                            margin={{ top: 26, right: 14, left: 8, bottom: 6 }}
+                          >
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                             <XAxis
                               dataKey="subsecao"
@@ -678,7 +682,10 @@ export default function FinancialPage() {
                               textAnchor="end"
                               height={102}
                             />
-                            <YAxis tick={{ fontSize: 11 }} />
+                            <YAxis
+                              domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.15)]}
+                              tick={{ fontSize: 11 }}
+                            />
                             <Tooltip
                               formatter={(value: number, _name, payload: any) => {
                                 if (payload?.dataKey === 'percentual') {
