@@ -203,45 +203,12 @@ export default function FinancialPage() {
     setIsExportingPdf(true)
 
     const exportNode = dashboardExportRef.current
-    const originalWidth = exportNode.style.width
-    const originalMaxWidth = exportNode.style.maxWidth
-    const horizontalScrollNodes = Array.from(
-      exportNode.querySelectorAll<HTMLElement>('[data-export-scroll="x"]')
-    )
-    const originalOverflows = horizontalScrollNodes.map(node => ({
-      overflow: node.style.overflow,
-      overflowX: node.style.overflowX,
-    }))
 
     try {
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
       ])
-
-      exportNode.style.maxWidth = 'none'
-      exportNode.style.width = `${Math.max(exportNode.scrollWidth, exportNode.clientWidth)}px`
-      horizontalScrollNodes.forEach(node => {
-        node.style.overflow = 'visible'
-        node.style.overflowX = 'visible'
-      })
-
-      await new Promise(resolve => requestAnimationFrame(() => resolve(null)))
-
-      const exportWidth = Math.max(exportNode.scrollWidth, exportNode.clientWidth)
-      const exportHeight = Math.max(exportNode.scrollHeight, exportNode.clientHeight)
-      const area = exportWidth * exportHeight
-      const scale = area > 10_000_000 ? 1.2 : 1.6
-
-      const canvas = await html2canvas(exportNode, {
-        scale,
-        useCORS: true,
-        backgroundColor: '#0f172a',
-        windowWidth: exportWidth,
-        windowHeight: exportHeight,
-        scrollX: 0,
-        scrollY: 0,
-      })
 
       const pdf = new jsPDF({
         orientation: 'landscape',
@@ -255,13 +222,64 @@ export default function FinancialPage() {
       const usableWidth = pageWidth - margin * 2
       const usableHeight = pageHeight - margin * 2
 
-      const ratio = Math.min(usableWidth / canvas.width, usableHeight / canvas.height)
-      const imgWidth = canvas.width * ratio
-      const imgHeight = canvas.height * ratio
-      const offsetX = margin + (usableWidth - imgWidth) / 2
-      const offsetY = margin + (usableHeight - imgHeight) / 2
+      const exportBlocks = Array.from(
+        exportNode.querySelectorAll<HTMLElement>('[data-export-block="true"]')
+      )
+      const blocks = exportBlocks.length ? exportBlocks : [exportNode]
 
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, offsetY, imgWidth, imgHeight)
+      for (let index = 0; index < blocks.length; index += 1) {
+        const block = blocks[index]
+        const scrollNodes = Array.from(block.querySelectorAll<HTMLElement>('[data-export-scroll="x"]'))
+
+        const originalBlockWidth = block.style.width
+        const originalBlockMaxWidth = block.style.maxWidth
+        const originalOverflows = scrollNodes.map(node => ({
+          overflow: node.style.overflow,
+          overflowX: node.style.overflowX,
+        }))
+
+        try {
+          block.style.maxWidth = 'none'
+          block.style.width = `${Math.max(block.scrollWidth, block.clientWidth)}px`
+          scrollNodes.forEach(node => {
+            node.style.overflow = 'visible'
+            node.style.overflowX = 'visible'
+          })
+
+          await new Promise(resolve => requestAnimationFrame(() => resolve(null)))
+
+          const exportWidth = Math.max(block.scrollWidth, block.clientWidth)
+          const exportHeight = Math.max(block.scrollHeight, block.clientHeight)
+          const area = exportWidth * exportHeight
+          const scale = area > 7_000_000 ? 1 : 1.3
+
+          const canvas = await html2canvas(block, {
+            scale,
+            useCORS: true,
+            backgroundColor: '#0f172a',
+            windowWidth: exportWidth,
+            windowHeight: exportHeight,
+            scrollX: 0,
+            scrollY: 0,
+          })
+
+          const ratio = Math.min(usableWidth / canvas.width, usableHeight / canvas.height)
+          const imgWidth = canvas.width * ratio
+          const imgHeight = canvas.height * ratio
+          const offsetX = margin + (usableWidth - imgWidth) / 2
+          const offsetY = margin + (usableHeight - imgHeight) / 2
+
+          if (index > 0) pdf.addPage('a3', 'landscape')
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, offsetY, imgWidth, imgHeight)
+        } finally {
+          block.style.width = originalBlockWidth
+          block.style.maxWidth = originalBlockMaxWidth
+          scrollNodes.forEach((node, idx) => {
+            node.style.overflow = originalOverflows[idx]?.overflow ?? ''
+            node.style.overflowX = originalOverflows[idx]?.overflowX ?? ''
+          })
+        }
+      }
 
       const fileName = `dashboard-financeiro-${new Date().toISOString().slice(0, 10)}.pdf`
       const blob = pdf.output('blob')
@@ -279,12 +297,6 @@ export default function FinancialPage() {
       console.error('Falha ao exportar PDF do dashboard financeiro:', error)
       toast.error('Falha ao exportar PDF. Tente novamente.')
     } finally {
-      exportNode.style.width = originalWidth
-      exportNode.style.maxWidth = originalMaxWidth
-      horizontalScrollNodes.forEach((node, idx) => {
-        node.style.overflow = originalOverflows[idx]?.overflow ?? ''
-        node.style.overflowX = originalOverflows[idx]?.overflowX ?? ''
-      })
       setIsExportingPdf(false)
     }
   }
@@ -613,7 +625,7 @@ export default function FinancialPage() {
 
           {dashboardSummaryQuery.data && pieData && (
             <div ref={dashboardExportRef} className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-export-block="true">
                 <div className="rounded-lg border border-slate-700 p-3">
                   <p className="text-xs text-slate-400">Total base</p>
                   <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalBase}</p>
@@ -632,7 +644,7 @@ export default function FinancialPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" data-export-block="true">
                 {chartVisibility.situacao && (
                   <div className="rounded-lg border border-slate-700 p-4">
                     <p className="text-sm font-semibold mb-1">Situação financeira</p>
@@ -739,7 +751,7 @@ export default function FinancialPage() {
               </div>
 
               {chartVisibility.seccional && (
-                <div className="rounded-lg border border-slate-700 p-4 space-y-3">
+                <div className="rounded-lg border border-slate-700 p-4 space-y-3" data-export-block="true">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-slate-200">Seccional</h3>
                     <Button
@@ -831,7 +843,7 @@ export default function FinancialPage() {
               )}
 
               {chartVisibility.seccionalComparativo && (
-                <div className="rounded-lg border border-slate-700 p-4 space-y-3">
+                <div className="rounded-lg border border-slate-700 p-4 space-y-3" data-export-block="true">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-slate-200">Adimplentes x Inadimplentes por Seccional</h3>
                     <Button
