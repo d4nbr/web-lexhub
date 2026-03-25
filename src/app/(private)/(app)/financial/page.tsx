@@ -147,6 +147,7 @@ export default function FinancialPage() {
   })
   const [applied, setApplied] = useState<FinancialLawyersFilters | null>(null)
   const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false)
+  const [isUploadBaseModalOpen, setIsUploadBaseModalOpen] = useState(false)
   const [chartVisibility, setChartVisibility] = useState<DashboardChartVisibility>({
     situacao: true,
     sexo: true,
@@ -303,7 +304,12 @@ export default function FinancialPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl font-calsans font-bold tracking-tight">Financeiro</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-3xl font-calsans font-bold tracking-tight">Financeiro</h1>
+        <Button variant="secondary" onClick={() => setIsUploadBaseModalOpen(true)}>
+          Atualizar Base
+        </Button>
+      </div>
       <Separator orientation="horizontal" />
 
       <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-slate-200 space-y-4">
@@ -494,6 +500,25 @@ export default function FinancialPage() {
           </div>
         </div>
       )}
+
+      <Dialog open={isUploadBaseModalOpen} onOpenChange={setIsUploadBaseModalOpen}>
+        <DialogContent className="!w-[96vw] !max-w-[1320px] h-[88vh] max-h-[88vh] border-slate-700 bg-slate-900 text-slate-100 p-0 overflow-hidden">
+          <DialogHeader className="px-4 py-3 border-b border-slate-700">
+            <DialogTitle>Atualizar Base</DialogTitle>
+            <DialogDescription>
+              Atualização da base via webhook n8n incorporado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="h-full w-full">
+            <iframe
+              title="Atualizar Base OAB"
+              src="https://n8n.iaoptimus.online/webhook/oabma/financeiro/upload-base"
+              className="h-[calc(88vh-84px)] w-full bg-white"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
         <DialogContent
