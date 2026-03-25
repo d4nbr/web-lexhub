@@ -91,6 +91,7 @@ interface DashboardChartVisibility {
   seccionalComparativo: boolean
 }
 
+type BarLabelMode = 'absolute' | 'percent'
 function calcPercent(value: number, total: number) {
   if (!total) return 0
   return Number(((value / total) * 100).toFixed(2))
@@ -145,6 +146,8 @@ export default function FinancialPage() {
     seccional: true,
     seccionalComparativo: true,
   })
+  const [seccionalLabelMode, setSeccionalLabelMode] = useState<BarLabelMode>('absolute')
+  const [seccionalComparativoLabelMode, setSeccionalComparativoLabelMode] = useState<BarLabelMode>('absolute')
 
   const lawyersQuery = useQuery({
     queryKey: ['financial', 'lawyers', applied],
@@ -200,13 +203,21 @@ export default function FinancialPage() {
     'financial-dashboard-result-modal !w-[92vw] sm:!w-[92vw] !max-w-[92vw] xl:!max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto'
 
   const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
-  const seccionalChartWidth = Math.max(1300, seccionalData.length * 64)
-  const seccionalBarSize = seccionalData.length > 16 ? 12 : seccionalData.length > 10 ? 16 : 22
+  const seccionalChartWidth = Math.max(1300, seccionalData.length * 72)
+  const seccionalBarSize = seccionalData.length > 16 ? 11 : seccionalData.length > 10 ? 14 : 20
 
-  const seccionalComparativoData = dashboardSummaryQuery.data?.seccionalComparativo ?? []
-  const seccionalComparativoWidth = Math.max(1300, seccionalComparativoData.length * 64)
+  const seccionalComparativoData = useMemo(
+    () =>
+      (dashboardSummaryQuery.data?.seccionalComparativo ?? []).map(item => ({
+        ...item,
+        adimplentesPctLabel: `${((item.percentual_adimplentes ?? 0)).toFixed(1).replace('.', ',')}%`,
+        inadimplentesPctLabel: `${((item.percentual_inadimplentes ?? 0)).toFixed(1).replace('.', ',')}%`,
+      })),
+    [dashboardSummaryQuery.data?.seccionalComparativo]
+  )
+  const seccionalComparativoWidth = Math.max(1400, seccionalComparativoData.length * 86)
   const seccionalComparativoBarSize =
-    seccionalComparativoData.length > 16 ? 8 : seccionalComparativoData.length > 10 ? 10 : 14
+    seccionalComparativoData.length > 16 ? 8 : seccionalComparativoData.length > 10 ? 10 : 12
 
   const pieData = useMemo(() => {
     if (!dashboardSummaryQuery.data) return null
@@ -624,7 +635,21 @@ export default function FinancialPage() {
 
               {chartVisibility.seccional && (
                 <div className="rounded-lg border border-slate-700 p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-200">Seccional</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-slate-200">Seccional</h3>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={seccionalLabelMode === 'absolute' ? 'default' : 'outline'}
+                      onClick={() =>
+                        setSeccionalLabelMode(prev =>
+                          prev === 'absolute' ? 'percent' : 'absolute'
+                        )
+                      }
+                    >
+                      Label: {seccionalLabelMode === 'absolute' ? 'Absoluto' : '%'}
+                    </Button>
+                  </div>
                   <p className="text-xs text-slate-400">Base de cálculo: Total final com filtros ({dashboardSummaryQuery.data.totalFiltrado})</p>
 
                   {dashboardSummaryQuery.isLoading && (
@@ -657,7 +682,11 @@ export default function FinancialPage() {
                             <Tooltip
                               formatter={(value: number, _name, payload: any) => {
                                 if (payload?.dataKey === 'percentual') {
-                                  return [`${value}%`, 'Participação']
+                                  const total = payload?.payload?.total ?? 0
+                                  if (seccionalLabelMode === 'absolute') {
+                                    return [`${value}%`, 'Participação']
+                                  }
+                                  return [`${total}`, 'Valor absoluto']
                                 }
                                 return [value, payload?.name ?? 'Valor']
                               }}
@@ -670,10 +699,15 @@ export default function FinancialPage() {
                               minPointSize={2}
                             >
                               <LabelList
-                                dataKey="total"
+                                dataKey={seccionalLabelMode === 'absolute' ? 'total' : 'percentual'}
+                                formatter={(value: number) =>
+                                  seccionalLabelMode === 'absolute'
+                                    ? value
+                                    : `${Number(value).toFixed(1).replace('.', ',')}%`
+                                }
                                 position="top"
                                 fill="#e2e8f0"
-                                fontSize={10}
+                                fontSize={9}
                               />
                             </Bar>
                           </BarChart>
@@ -686,7 +720,21 @@ export default function FinancialPage() {
 
               {chartVisibility.seccionalComparativo && (
                 <div className="rounded-lg border border-slate-700 p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-200">Adimplentes x Inadimplentes por Seccional</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-slate-200">Adimplentes x Inadimplentes por Seccional</h3>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={seccionalComparativoLabelMode === 'absolute' ? 'default' : 'outline'}
+                      onClick={() =>
+                        setSeccionalComparativoLabelMode(prev =>
+                          prev === 'absolute' ? 'percent' : 'absolute'
+                        )
+                      }
+                    >
+                      Label: {seccionalComparativoLabelMode === 'absolute' ? 'Absoluto' : '%'}
+                    </Button>
+                  </div>
 
                   {dashboardSummaryQuery.isLoading && (
                     <div className="rounded-md border border-slate-700 p-3 text-sm text-slate-300 animate-pulse">
@@ -704,7 +752,7 @@ export default function FinancialPage() {
                     <div className="overflow-x-auto pb-2">
                       <div style={{ width: `${seccionalComparativoWidth}px` }} className="h-[360px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={seccionalComparativoData} barGap={4}>
+                          <BarChart data={seccionalComparativoData} barGap={8} barCategoryGap="22%">
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                             <XAxis
                               dataKey="subsecao"
@@ -720,12 +768,18 @@ export default function FinancialPage() {
                                 if (name === 'Adimplentes') {
                                   const total = payload?.payload?.total ?? 0
                                   const pctVal = total ? ((value / total) * 100).toFixed(2) : '0.00'
-                                  return [`${pctVal}%`, 'Adimplentes']
+                                  if (seccionalComparativoLabelMode === 'absolute') {
+                                    return [`${pctVal}%`, 'Adimplentes (%)']
+                                  }
+                                  return [value, 'Adimplentes (valor)']
                                 }
                                 if (name === 'Inadimplentes') {
                                   const total = payload?.payload?.total ?? 0
                                   const pctVal = total ? ((value / total) * 100).toFixed(2) : '0.00'
-                                  return [`${pctVal}%`, 'Inadimplentes']
+                                  if (seccionalComparativoLabelMode === 'absolute') {
+                                    return [`${pctVal}%`, 'Inadimplentes (%)']
+                                  }
+                                  return [value, 'Inadimplentes (valor)']
                                 }
                                 return [value, name]
                               }}
@@ -738,7 +792,17 @@ export default function FinancialPage() {
                               barSize={seccionalComparativoBarSize}
                               minPointSize={2}
                             >
-                              <LabelList position="top" fill="#e2e8f0" fontSize={10} />
+                              <LabelList
+                                dataKey={
+                                  seccionalComparativoLabelMode === 'absolute'
+                                    ? 'adimplentes'
+                                    : 'adimplentesPctLabel'
+                                }
+                                position="top"
+                                fill="#e2e8f0"
+                                fontSize={9}
+                                offset={10}
+                              />
                             </Bar>
                             <Bar
                               dataKey="inadimplentes"
@@ -747,7 +811,17 @@ export default function FinancialPage() {
                               barSize={seccionalComparativoBarSize}
                               minPointSize={2}
                             >
-                              <LabelList position="top" fill="#e2e8f0" fontSize={10} />
+                              <LabelList
+                                dataKey={
+                                  seccionalComparativoLabelMode === 'absolute'
+                                    ? 'inadimplentes'
+                                    : 'inadimplentesPctLabel'
+                                }
+                                position="top"
+                                fill="#e2e8f0"
+                                fontSize={9}
+                                offset={2}
+                              />
                             </Bar>
                           </BarChart>
                         </ResponsiveContainer>
