@@ -54,6 +54,19 @@ import {
 
 const DEFAULT_PAGE_SIZE = 50
 
+const DASHBOARD_COLORS = {
+  line: '#6fa79f',
+  label: '#e2e8f0',
+  adimplente: '#2f9e95',
+  inadimplente: '#d16464',
+  sexoM: '#3fb6ab',
+  sexoF: '#74d2c9',
+  pcdSim: '#56bfb5',
+  pcdNao: '#3c536b',
+  suplementar: '#2fa69b',
+  originaria: '#7ccfc7',
+} as const
+
 const SUBSECAO_OPTIONS = [
   { value: 'ACAILANDIA', label: 'Açailândia' },
   { value: 'BACABAL', label: 'Bacabal' },
@@ -113,14 +126,14 @@ function renderPieValueLabel(props: any) {
 
   return (
     <g>
-      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#94a3b8" fill="none" strokeWidth={1} />
-      <circle cx={ex} cy={ey} r={2} fill="#94a3b8" />
+      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={DASHBOARD_COLORS.line} fill="none" strokeWidth={1} />
+      <circle cx={ex} cy={ey} r={2} fill={DASHBOARD_COLORS.line} />
       <text
         x={ex + (textAnchor === 'start' ? 5 : -5)}
         y={ey}
         textAnchor={textAnchor}
         dominantBaseline="central"
-        fill="#e2e8f0"
+        fill={DASHBOARD_COLORS.label}
         fontSize={11}
         fontWeight={600}
       >
@@ -226,20 +239,20 @@ export default function FinancialPage() {
 
     return {
       adimplencia: [
-        { name: 'Adimplentes', value: d.adimplentes, color: '#22c55e' },
-        { name: 'Inadimplentes', value: d.inadimplentes, color: '#ef4444' },
+        { name: 'Adimplentes', value: d.adimplentes, color: DASHBOARD_COLORS.adimplente },
+        { name: 'Inadimplentes', value: d.inadimplentes, color: DASHBOARD_COLORS.inadimplente },
       ],
       sexo: [
-        { name: 'Masculino', value: d.masculino, color: '#38bdf8' },
-        { name: 'Feminino', value: d.feminino, color: '#f472b6' },
+        { name: 'Masculino', value: d.masculino, color: DASHBOARD_COLORS.sexoM },
+        { name: 'Feminino', value: d.feminino, color: DASHBOARD_COLORS.sexoF },
       ],
       pcd: [
-        { name: 'PCD Sim', value: d.pcdSim, color: '#a78bfa' },
-        { name: 'PCD Não', value: d.pcdNao, color: '#334155' },
+        { name: 'PCD Sim', value: d.pcdSim, color: DASHBOARD_COLORS.pcdSim },
+        { name: 'PCD Não', value: d.pcdNao, color: DASHBOARD_COLORS.pcdNao },
       ],
       tipoInscricao: [
-        { name: 'Suplementar', value: d.suplementares, color: '#06b6d4' },
-        { name: 'Originária', value: d.originarias, color: '#f59e0b' },
+        { name: 'Suplementar', value: d.suplementares, color: DASHBOARD_COLORS.suplementar },
+        { name: 'Originária', value: d.originarias, color: DASHBOARD_COLORS.originaria },
       ],
     }
   }, [dashboardSummaryQuery.data])
@@ -669,7 +682,7 @@ export default function FinancialPage() {
                       <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={seccionalData} barCategoryGap="8%">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <CartesianGrid strokeDasharray="3 3" stroke={DASHBOARD_COLORS.pcdNao} />
                             <XAxis
                               dataKey="subsecao"
                               tick={{ fontSize: 10 }}
@@ -693,7 +706,7 @@ export default function FinancialPage() {
                             />
                             <Bar
                               dataKey="percentual"
-                              fill="#22c55e"
+                              fill={DASHBOARD_COLORS.adimplente}
                               name="% no universo atual"
                               barSize={seccionalBarSize}
                               minPointSize={2}
@@ -706,7 +719,7 @@ export default function FinancialPage() {
                                     : `${Number(value).toFixed(1).replace('.', ',')}%`
                                 }
                                 position="top"
-                                fill="#e2e8f0"
+                                fill={DASHBOARD_COLORS.label}
                                 fontSize={9}
                               />
                             </Bar>
@@ -753,7 +766,7 @@ export default function FinancialPage() {
                       <div style={{ width: `${seccionalComparativoWidth}px` }} className="h-[360px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={seccionalComparativoData} barGap={4} barCategoryGap="10%">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <CartesianGrid strokeDasharray="3 3" stroke={DASHBOARD_COLORS.pcdNao} />
                             <XAxis
                               dataKey="subsecao"
                               tick={{ fontSize: 10 }}
@@ -787,7 +800,7 @@ export default function FinancialPage() {
                             <Legend verticalAlign="top" iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                             <Bar
                               dataKey="adimplentes"
-                              fill="#22c55e"
+                              fill={DASHBOARD_COLORS.adimplente}
                               name="Adimplentes"
                               barSize={seccionalComparativoBarSize}
                               minPointSize={2}
@@ -799,14 +812,14 @@ export default function FinancialPage() {
                                     : 'adimplentesPctLabel'
                                 }
                                 position="top"
-                                fill="#e2e8f0"
+                                fill={DASHBOARD_COLORS.label}
                                 fontSize={9}
                                 offset={10}
                               />
                             </Bar>
                             <Bar
                               dataKey="inadimplentes"
-                              fill="#ef4444"
+                              fill={DASHBOARD_COLORS.inadimplente}
                               name="Inadimplentes"
                               barSize={seccionalComparativoBarSize}
                               minPointSize={2}
@@ -818,7 +831,7 @@ export default function FinancialPage() {
                                     : 'inadimplentesPctLabel'
                                 }
                                 position="top"
-                                fill="#e2e8f0"
+                                fill={DASHBOARD_COLORS.label}
                                 fontSize={9}
                                 offset={2}
                               />
