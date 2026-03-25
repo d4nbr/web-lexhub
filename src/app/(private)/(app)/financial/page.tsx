@@ -215,11 +215,13 @@ export default function FinancialPage() {
       cloneScrollNodes.forEach(node => {
         node.style.overflow = 'visible'
         node.style.overflowX = 'visible'
+        node.style.maxWidth = '100%'
 
         const firstChild = node.firstElementChild as HTMLElement | null
         if (firstChild) {
           firstChild.style.minWidth = '0'
-          firstChild.style.width = `${Math.max(firstChild.scrollWidth, firstChild.clientWidth)}px`
+          firstChild.style.width = '100%'
+          firstChild.style.maxWidth = '100%'
         }
       })
 
@@ -921,22 +923,34 @@ export default function FinancialPage() {
           }
 
           body.printing-financial-dashboard .financial-print-root {
-            position: fixed !important;
-            inset: 0 !important;
+            position: static !important;
+            inset: auto !important;
             background: #0f172a !important;
             padding: 12px !important;
             overflow: visible !important;
-            z-index: 999999 !important;
+            z-index: auto !important;
           }
 
           body.printing-financial-dashboard .financial-print-clone {
             width: 100% !important;
-            max-width: none !important;
+            max-width: 100% !important;
             break-inside: auto;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone [data-export-block='true'] {
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
 
           body.printing-financial-dashboard .financial-print-clone [data-export-scroll='x'] {
             overflow: visible !important;
+            max-width: 100% !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone [data-export-scroll='x'] > div {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
           }
         }
       `}</style>
