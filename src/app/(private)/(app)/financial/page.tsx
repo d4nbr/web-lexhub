@@ -114,9 +114,16 @@ function renderPieValueLabel(props: any) {
 
   return (
     <g>
-      <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#94a3b8" fill="none" strokeWidth={1} />
-      <circle cx={ex} cy={ey} r={2} fill="#94a3b8" />
+      <path
+        className="pie-external-label-line"
+        d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
+        stroke="#94a3b8"
+        fill="none"
+        strokeWidth={1}
+      />
+      <circle className="pie-external-label-dot" cx={ex} cy={ey} r={2} fill="#94a3b8" />
       <text
+        className="pie-external-label-text"
         x={ex + (textAnchor === 'start' ? 5 : -5)}
         y={ey}
         textAnchor={textAnchor}
@@ -969,6 +976,19 @@ export default function FinancialPage() {
             width: 100% !important;
             min-width: 0 !important;
             max-width: 100% !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .pie-external-label-text {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .pie-external-label-line {
+            stroke-width: 1.5 !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .pie-external-label-dot {
+            r: 2.6 !important;
           }
         }
       `}</style>
