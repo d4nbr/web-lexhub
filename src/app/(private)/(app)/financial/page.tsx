@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -148,6 +148,8 @@ export default function FinancialPage() {
   })
   const [seccionalLabelMode, setSeccionalLabelMode] = useState<BarLabelMode>('absolute')
   const [seccionalComparativoLabelMode, setSeccionalComparativoLabelMode] = useState<BarLabelMode>('absolute')
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const dashboardExportRef = useRef<HTMLDivElement | null>(null)
 
   const lawyersQuery = useQuery({
     queryKey: ['financial', 'lawyers', applied],
@@ -192,6 +194,80 @@ export default function FinancialPage() {
 
   function toggleChartVisibility(key: keyof DashboardChartVisibility) {
     setChartVisibility(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  async function handleExportPdf() {
+    if (!dashboardExportRef.current || isExportingPdf) return
+
+    setIsExportingPdf(true)
+
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ])
+
+      const canvas = await html2canvas(dashboardExportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0f172a',
+        scrollY: 0,
+      })
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const margin = 8
+      const usableWidth = pageWidth - margin * 2
+      const usableHeight = pageHeight - margin * 2
+
+      const pxPerMm = canvas.width / usableWidth
+      const pageCanvasHeightPx = Math.floor(usableHeight * pxPerMm)
+
+      let renderedHeightPx = 0
+      let pageIndex = 0
+
+      while (renderedHeightPx < canvas.height) {
+        const sliceHeightPx = Math.min(pageCanvasHeightPx, canvas.height - renderedHeightPx)
+
+        const pageCanvas = document.createElement('canvas')
+        pageCanvas.width = canvas.width
+        pageCanvas.height = sliceHeightPx
+
+        const ctx = pageCanvas.getContext('2d')
+        if (!ctx) break
+
+        ctx.drawImage(
+          canvas,
+          0,
+          renderedHeightPx,
+          canvas.width,
+          sliceHeightPx,
+          0,
+          0,
+          canvas.width,
+          sliceHeightPx
+        )
+
+        const imgData = pageCanvas.toDataURL('image/png')
+        const imgHeightMm = sliceHeightPx / pxPerMm
+
+        if (pageIndex > 0) pdf.addPage()
+        pdf.addImage(imgData, 'PNG', margin, margin, usableWidth, imgHeightMm)
+
+        renderedHeightPx += sliceHeightPx
+        pageIndex += 1
+      }
+
+      pdf.save(`dashboard-financeiro-${new Date().toISOString().slice(0, 10)}.pdf`)
+    } finally {
+      setIsExportingPdf(false)
+    }
   }
 
   const data = lawyersQuery.data
@@ -445,7 +521,7 @@ export default function FinancialPage() {
           <DialogHeader>
             <DialogTitle>Dashboard Financeiro</DialogTitle>
             {isDashboardResultReady && (
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <Button
                   type="button"
                   size="sm"
@@ -494,6 +570,16 @@ export default function FinancialPage() {
                 >
                   Adimpl x Inadimpl
                 </Button>
+                <div className="ml-auto" />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={isExportingPdf}
+                  onClick={handleExportPdf}
+                >
+                  {isExportingPdf ? 'Exportando PDF...' : 'Exportar PDF'}
+                </Button>
               </div>
             )}
           </DialogHeader>
@@ -507,7 +593,7 @@ export default function FinancialPage() {
           )}
 
           {dashboardSummaryQuery.data && pieData && (
-            <>
+            <div ref={dashboardExportRef} className="space-y-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-lg border border-slate-700 p-3">
                   <p className="text-xs text-slate-400">Total base</p>
@@ -837,7 +923,7 @@ export default function FinancialPage() {
                   )}
                 </div>
               )}
-            </>
+            </div>
           )}
 
           <DialogFooter>
