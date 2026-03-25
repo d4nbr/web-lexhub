@@ -49,6 +49,7 @@ import {
   YAxis,
   Cell,
   Legend,
+  LabelList,
 } from 'recharts'
 
 const DEFAULT_PAGE_SIZE = 50
@@ -656,8 +657,7 @@ export default function FinancialPage() {
                             <Tooltip
                               formatter={(value: number, _name, payload: any) => {
                                 if (payload?.dataKey === 'percentual') {
-                                  const quantidade = payload?.payload?.total ?? 0
-                                  return [`${value}% (${quantidade} advogados)`, 'Participação']
+                                  return [`${value}%`, 'Participação']
                                 }
                                 return [value, payload?.name ?? 'Valor']
                               }}
@@ -668,7 +668,14 @@ export default function FinancialPage() {
                               name="% no universo atual"
                               barSize={seccionalBarSize}
                               minPointSize={2}
-                            />
+                            >
+                              <LabelList
+                                dataKey="total"
+                                position="top"
+                                fill="#e2e8f0"
+                                fontSize={10}
+                              />
+                            </Bar>
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
@@ -713,12 +720,12 @@ export default function FinancialPage() {
                                 if (name === 'Adimplentes') {
                                   const total = payload?.payload?.total ?? 0
                                   const pctVal = total ? ((value / total) * 100).toFixed(2) : '0.00'
-                                  return [`${value} (${pctVal}%)`, 'Adimplentes']
+                                  return [`${pctVal}%`, 'Adimplentes']
                                 }
                                 if (name === 'Inadimplentes') {
                                   const total = payload?.payload?.total ?? 0
                                   const pctVal = total ? ((value / total) * 100).toFixed(2) : '0.00'
-                                  return [`${value} (${pctVal}%)`, 'Inadimplentes']
+                                  return [`${pctVal}%`, 'Inadimplentes']
                                 }
                                 return [value, name]
                               }}
@@ -730,14 +737,18 @@ export default function FinancialPage() {
                               name="Adimplentes"
                               barSize={seccionalComparativoBarSize}
                               minPointSize={2}
-                            />
+                            >
+                              <LabelList position="top" fill="#e2e8f0" fontSize={10} />
+                            </Bar>
                             <Bar
                               dataKey="inadimplentes"
                               fill="#ef4444"
                               name="Inadimplentes"
                               barSize={seccionalComparativoBarSize}
                               minPointSize={2}
-                            />
+                            >
+                              <LabelList position="top" fill="#e2e8f0" fontSize={10} />
+                            </Bar>
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
