@@ -295,7 +295,42 @@ export default function FinancialPage() {
       toast.success('PDF exportado com sucesso.')
     } catch (error) {
       console.error('Falha ao exportar PDF do dashboard financeiro:', error)
-      toast.error('Falha ao exportar PDF. Tente novamente.')
+
+      try {
+        const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1600,height=1000')
+        if (printWindow) {
+          const clone = exportNode.cloneNode(true) as HTMLElement
+          clone.style.maxWidth = 'none'
+          clone.style.width = '100%'
+
+          const css = `
+            <style>
+              @page { size: A3 landscape; margin: 10mm; }
+              body { margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; font-family: Inter, Segoe UI, sans-serif; }
+              * { box-sizing: border-box; }
+              .overflow-x-auto { overflow: visible !important; }
+              .financial-dashboard-result-modal { overflow: visible !important; height: auto !important; max-height: none !important; }
+            </style>
+          `
+
+          printWindow.document.open()
+          printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8" />${css}</head><body></body></html>`)
+          printWindow.document.body.appendChild(clone)
+          printWindow.document.close()
+
+          setTimeout(() => {
+            printWindow.focus()
+            printWindow.print()
+          }, 350)
+
+          toast.warning('Exportação direta falhou. Abrimos a versão para impressão/PDF.')
+        } else {
+          toast.error('Falha ao exportar PDF. Libere pop-up e tente novamente.')
+        }
+      } catch (fallbackError) {
+        console.error('Falha no fallback de impressão do dashboard:', fallbackError)
+        toast.error('Falha ao exportar PDF. Tente novamente.')
+      }
     } finally {
       setIsExportingPdf(false)
     }
