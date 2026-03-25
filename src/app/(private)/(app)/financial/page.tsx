@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Printer } from 'lucide-react'
+import { Printer, DatabaseBackup } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -306,7 +306,12 @@ export default function FinancialPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-3xl font-calsans font-bold tracking-tight">Financeiro</h1>
-        <Button variant="secondary" onClick={() => setIsUploadBaseModalOpen(true)}>
+        <Button
+          variant="secondary"
+          onClick={() => setIsUploadBaseModalOpen(true)}
+          className="gap-2"
+        >
+          <DatabaseBackup className="h-4 w-4" />
           Atualizar Base
         </Button>
       </div>
