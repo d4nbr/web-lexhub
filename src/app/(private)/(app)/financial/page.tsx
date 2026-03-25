@@ -200,11 +200,11 @@ export default function FinancialPage() {
   const dashboardLoadingModalClass =
     'financial-dashboard-loading-modal w-[92vw] max-w-[1480px] border-slate-700 bg-slate-900 text-slate-100 max-h-[88vh] overflow-y-auto'
   const dashboardResultModalClass =
-    'financial-dashboard-result-modal !w-[92vw] sm:!w-[92vw] !max-w-[92vw] xl:!max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto'
+    'financial-dashboard-result-modal !w-[92vw] sm:!w-[92vw] !max-w-[92vw] xl:!max-w-[1680px] border-slate-700 bg-slate-900 text-slate-100 h-[90vh] max-h-[90vh] overflow-y-auto overflow-x-hidden'
 
   const seccionalData = dashboardSummaryQuery.data?.seccionalDistribuicao ?? []
-  const seccionalChartWidth = Math.max(1300, seccionalData.length * 72)
-  const seccionalBarSize = seccionalData.length > 16 ? 11 : seccionalData.length > 10 ? 14 : 20
+  const seccionalChartWidth = Math.max(1200, seccionalData.length * 56)
+  const seccionalBarSize = seccionalData.length > 16 ? 9 : seccionalData.length > 10 ? 12 : 18
 
   const seccionalComparativoData = useMemo(
     () =>
@@ -215,9 +215,9 @@ export default function FinancialPage() {
       })),
     [dashboardSummaryQuery.data?.seccionalComparativo]
   )
-  const seccionalComparativoWidth = Math.max(1400, seccionalComparativoData.length * 86)
+  const seccionalComparativoWidth = Math.max(1280, seccionalComparativoData.length * 68)
   const seccionalComparativoBarSize =
-    seccionalComparativoData.length > 16 ? 8 : seccionalComparativoData.length > 10 ? 10 : 12
+    seccionalComparativoData.length > 16 ? 7 : seccionalComparativoData.length > 10 ? 9 : 11
 
   const pieData = useMemo(() => {
     if (!dashboardSummaryQuery.data) return null
@@ -668,7 +668,7 @@ export default function FinancialPage() {
                     <div className="overflow-x-auto pb-2">
                       <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={seccionalData}>
+                          <BarChart data={seccionalData} barCategoryGap="8%">
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                             <XAxis
                               dataKey="subsecao"
@@ -752,7 +752,7 @@ export default function FinancialPage() {
                     <div className="overflow-x-auto pb-2">
                       <div style={{ width: `${seccionalComparativoWidth}px` }} className="h-[360px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={seccionalComparativoData} barGap={8} barCategoryGap="22%">
+                          <BarChart data={seccionalComparativoData} barGap={4} barCategoryGap="10%">
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                             <XAxis
                               dataKey="subsecao"
