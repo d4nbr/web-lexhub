@@ -200,6 +200,8 @@ export default function FinancialPage() {
   async function handleExportPdf() {
     if (!dashboardExportRef.current || isExportingPdf) return
 
+    const preOpenedWindow = window.open('', '_blank', 'noopener,noreferrer,width=1600,height=1000')
+
     setIsExportingPdf(true)
 
     const exportNode = dashboardExportRef.current
@@ -292,12 +294,17 @@ export default function FinancialPage() {
       link.remove()
       URL.revokeObjectURL(url)
 
+      if (preOpenedWindow && !preOpenedWindow.closed) preOpenedWindow.close()
+
       toast.success('PDF exportado com sucesso.')
     } catch (error) {
       console.error('Falha ao exportar PDF do dashboard financeiro:', error)
 
       try {
-        const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1600,height=1000')
+        const printWindow = preOpenedWindow && !preOpenedWindow.closed
+          ? preOpenedWindow
+          : window.open('', '_blank', 'noopener,noreferrer,width=1600,height=1000')
+
         if (printWindow) {
           const clone = exportNode.cloneNode(true) as HTMLElement
           clone.style.maxWidth = 'none'
