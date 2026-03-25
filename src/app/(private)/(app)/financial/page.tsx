@@ -37,6 +37,7 @@ import {
   type FinancialDashboardResponse,
 } from '@/api/financial/get-financial-dashboard'
 import { LoadingDashboard } from './components/loading-dashboard'
+import { toast } from 'sonner'
 import {
   Bar,
   BarChart,
@@ -201,23 +202,51 @@ export default function FinancialPage() {
 
     setIsExportingPdf(true)
 
+    const exportNode = dashboardExportRef.current
+    const originalWidth = exportNode.style.width
+    const originalMaxWidth = exportNode.style.maxWidth
+    const horizontalScrollNodes = Array.from(
+      exportNode.querySelectorAll<HTMLElement>('[data-export-scroll="x"]')
+    )
+    const originalOverflows = horizontalScrollNodes.map(node => ({
+      overflow: node.style.overflow,
+      overflowX: node.style.overflowX,
+    }))
+
     try {
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
       ])
 
-      const canvas = await html2canvas(dashboardExportRef.current, {
-        scale: 2,
+      exportNode.style.maxWidth = 'none'
+      exportNode.style.width = `${Math.max(exportNode.scrollWidth, exportNode.clientWidth)}px`
+      horizontalScrollNodes.forEach(node => {
+        node.style.overflow = 'visible'
+        node.style.overflowX = 'visible'
+      })
+
+      await new Promise(resolve => requestAnimationFrame(() => resolve(null)))
+
+      const exportWidth = Math.max(exportNode.scrollWidth, exportNode.clientWidth)
+      const exportHeight = Math.max(exportNode.scrollHeight, exportNode.clientHeight)
+      const area = exportWidth * exportHeight
+      const scale = area > 10_000_000 ? 1.2 : 1.6
+
+      const canvas = await html2canvas(exportNode, {
+        scale,
         useCORS: true,
         backgroundColor: '#0f172a',
+        windowWidth: exportWidth,
+        windowHeight: exportHeight,
+        scrollX: 0,
         scrollY: 0,
       })
 
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4',
+        format: 'a3',
       })
 
       const pageWidth = pdf.internal.pageSize.getWidth()
@@ -226,46 +255,36 @@ export default function FinancialPage() {
       const usableWidth = pageWidth - margin * 2
       const usableHeight = pageHeight - margin * 2
 
-      const pxPerMm = canvas.width / usableWidth
-      const pageCanvasHeightPx = Math.floor(usableHeight * pxPerMm)
+      const ratio = Math.min(usableWidth / canvas.width, usableHeight / canvas.height)
+      const imgWidth = canvas.width * ratio
+      const imgHeight = canvas.height * ratio
+      const offsetX = margin + (usableWidth - imgWidth) / 2
+      const offsetY = margin + (usableHeight - imgHeight) / 2
 
-      let renderedHeightPx = 0
-      let pageIndex = 0
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, offsetY, imgWidth, imgHeight)
 
-      while (renderedHeightPx < canvas.height) {
-        const sliceHeightPx = Math.min(pageCanvasHeightPx, canvas.height - renderedHeightPx)
+      const fileName = `dashboard-financeiro-${new Date().toISOString().slice(0, 10)}.pdf`
+      const blob = pdf.output('blob')
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
 
-        const pageCanvas = document.createElement('canvas')
-        pageCanvas.width = canvas.width
-        pageCanvas.height = sliceHeightPx
-
-        const ctx = pageCanvas.getContext('2d')
-        if (!ctx) break
-
-        ctx.drawImage(
-          canvas,
-          0,
-          renderedHeightPx,
-          canvas.width,
-          sliceHeightPx,
-          0,
-          0,
-          canvas.width,
-          sliceHeightPx
-        )
-
-        const imgData = pageCanvas.toDataURL('image/png')
-        const imgHeightMm = sliceHeightPx / pxPerMm
-
-        if (pageIndex > 0) pdf.addPage()
-        pdf.addImage(imgData, 'PNG', margin, margin, usableWidth, imgHeightMm)
-
-        renderedHeightPx += sliceHeightPx
-        pageIndex += 1
-      }
-
-      pdf.save(`dashboard-financeiro-${new Date().toISOString().slice(0, 10)}.pdf`)
+      toast.success('PDF exportado com sucesso.')
+    } catch (error) {
+      console.error('Falha ao exportar PDF do dashboard financeiro:', error)
+      toast.error('Falha ao exportar PDF. Tente novamente.')
     } finally {
+      exportNode.style.width = originalWidth
+      exportNode.style.maxWidth = originalMaxWidth
+      horizontalScrollNodes.forEach((node, idx) => {
+        node.style.overflow = originalOverflows[idx]?.overflow ?? ''
+        node.style.overflowX = originalOverflows[idx]?.overflowX ?? ''
+      })
       setIsExportingPdf(false)
     }
   }
@@ -751,7 +770,7 @@ export default function FinancialPage() {
                   )}
 
                   {!!seccionalData.length && (
-                    <div className="overflow-x-auto pb-2">
+                    <div className="overflow-x-auto pb-2" data-export-scroll="x">
                       <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
@@ -842,7 +861,7 @@ export default function FinancialPage() {
                   )}
 
                   {!!seccionalComparativoData.length && (
-                    <div className="overflow-x-auto pb-2">
+                    <div className="overflow-x-auto pb-2" data-export-scroll="x">
                       <div style={{ width: `${seccionalComparativoWidth}px` }} className="h-[360px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={seccionalComparativoData} barGap={4} barCategoryGap="10%">
