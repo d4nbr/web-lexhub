@@ -197,148 +197,36 @@ export default function FinancialPage() {
     setChartVisibility(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  async function handleExportPdf() {
+  function handleExportPdf() {
     if (!dashboardExportRef.current || isExportingPdf) return
-
-    const preOpenedWindow = window.open('', '_blank', 'noopener,noreferrer,width=1600,height=1000')
 
     setIsExportingPdf(true)
 
     const exportNode = dashboardExportRef.current
+    const scrollNodes = Array.from(exportNode.querySelectorAll<HTMLElement>('[data-export-scroll="x"]'))
+    const originalOverflows = scrollNodes.map(node => ({
+      overflow: node.style.overflow,
+      overflowX: node.style.overflowX,
+    }))
 
     try {
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
-      ])
-
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a3',
+      scrollNodes.forEach(node => {
+        node.style.overflow = 'visible'
+        node.style.overflowX = 'visible'
       })
 
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const margin = 8
-      const usableWidth = pageWidth - margin * 2
-      const usableHeight = pageHeight - margin * 2
-
-      const exportBlocks = Array.from(
-        exportNode.querySelectorAll<HTMLElement>('[data-export-block="true"]')
-      )
-      const blocks = exportBlocks.length ? exportBlocks : [exportNode]
-
-      for (let index = 0; index < blocks.length; index += 1) {
-        const block = blocks[index]
-        const scrollNodes = Array.from(block.querySelectorAll<HTMLElement>('[data-export-scroll="x"]'))
-
-        const originalBlockWidth = block.style.width
-        const originalBlockMaxWidth = block.style.maxWidth
-        const originalOverflows = scrollNodes.map(node => ({
-          overflow: node.style.overflow,
-          overflowX: node.style.overflowX,
-        }))
-
-        try {
-          block.style.maxWidth = 'none'
-          block.style.width = `${Math.max(block.scrollWidth, block.clientWidth)}px`
-          scrollNodes.forEach(node => {
-            node.style.overflow = 'visible'
-            node.style.overflowX = 'visible'
-          })
-
-          await new Promise(resolve => requestAnimationFrame(() => resolve(null)))
-
-          const exportWidth = Math.max(block.scrollWidth, block.clientWidth)
-          const exportHeight = Math.max(block.scrollHeight, block.clientHeight)
-          const area = exportWidth * exportHeight
-          const scale = area > 7_000_000 ? 1 : 1.3
-
-          const canvas = await html2canvas(block, {
-            scale,
-            useCORS: true,
-            backgroundColor: '#0f172a',
-            windowWidth: exportWidth,
-            windowHeight: exportHeight,
-            scrollX: 0,
-            scrollY: 0,
-          })
-
-          const ratio = Math.min(usableWidth / canvas.width, usableHeight / canvas.height)
-          const imgWidth = canvas.width * ratio
-          const imgHeight = canvas.height * ratio
-          const offsetX = margin + (usableWidth - imgWidth) / 2
-          const offsetY = margin + (usableHeight - imgHeight) / 2
-
-          if (index > 0) pdf.addPage('a3', 'landscape')
-          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', offsetX, offsetY, imgWidth, imgHeight)
-        } finally {
-          block.style.width = originalBlockWidth
-          block.style.maxWidth = originalBlockMaxWidth
-          scrollNodes.forEach((node, idx) => {
-            node.style.overflow = originalOverflows[idx]?.overflow ?? ''
-            node.style.overflowX = originalOverflows[idx]?.overflowX ?? ''
-          })
-        }
-      }
-
-      const fileName = `dashboard-financeiro-${new Date().toISOString().slice(0, 10)}.pdf`
-      const blob = pdf.output('blob')
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = fileName
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(url)
-
-      if (preOpenedWindow && !preOpenedWindow.closed) preOpenedWindow.close()
-
-      toast.success('PDF exportado com sucesso.')
+      document.body.classList.add('printing-financial-dashboard')
+      window.print()
+      toast.success('Painel de impressão aberto. Escolha "Salvar como PDF".')
     } catch (error) {
-      console.error('Falha ao exportar PDF do dashboard financeiro:', error)
-
-      try {
-        const printWindow = preOpenedWindow && !preOpenedWindow.closed
-          ? preOpenedWindow
-          : window.open('', '_blank', 'noopener,noreferrer,width=1600,height=1000')
-
-        if (printWindow) {
-          const clone = exportNode.cloneNode(true) as HTMLElement
-          clone.style.maxWidth = 'none'
-          clone.style.width = '100%'
-
-          const css = `
-            <style>
-              @page { size: A3 landscape; margin: 10mm; }
-              body { margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; font-family: Inter, Segoe UI, sans-serif; }
-              * { box-sizing: border-box; }
-              .overflow-x-auto { overflow: visible !important; }
-              .financial-dashboard-result-modal { overflow: visible !important; height: auto !important; max-height: none !important; }
-            </style>
-          `
-
-          printWindow.document.open()
-          printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8" />${css}</head><body></body></html>`)
-          printWindow.document.body.appendChild(clone)
-          printWindow.document.close()
-
-          setTimeout(() => {
-            printWindow.focus()
-            printWindow.print()
-          }, 350)
-
-          toast.warning('Exportação direta falhou. Abrimos a versão para impressão/PDF.')
-        } else {
-          toast.error('Falha ao exportar PDF. Libere pop-up e tente novamente.')
-        }
-      } catch (fallbackError) {
-        console.error('Falha no fallback de impressão do dashboard:', fallbackError)
-        toast.error('Falha ao exportar PDF. Tente novamente.')
-      }
+      console.error('Falha ao abrir impressão do dashboard financeiro:', error)
+      toast.error('Falha ao abrir impressão. Tente novamente.')
     } finally {
+      document.body.classList.remove('printing-financial-dashboard')
+      scrollNodes.forEach((node, idx) => {
+        node.style.overflow = originalOverflows[idx]?.overflow ?? ''
+        node.style.overflowX = originalOverflows[idx]?.overflowX ?? ''
+      })
       setIsExportingPdf(false)
     }
   }
@@ -651,7 +539,7 @@ export default function FinancialPage() {
                   disabled={isExportingPdf}
                   onClick={handleExportPdf}
                 >
-                  {isExportingPdf ? 'Exportando PDF...' : 'Exportar PDF'}
+                  {isExportingPdf ? 'Abrindo impressão...' : 'Imprimir / Salvar PDF'}
                 </Button>
               </div>
             )}
@@ -666,7 +554,7 @@ export default function FinancialPage() {
           )}
 
           {dashboardSummaryQuery.data && pieData && (
-            <div ref={dashboardExportRef} className="space-y-4">
+            <div ref={dashboardExportRef} className="space-y-4 print-dashboard-target">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" data-export-block="true">
                 <div className="rounded-lg border border-slate-700 p-3">
                   <p className="text-xs text-slate-400">Total base</p>
@@ -1006,6 +894,32 @@ export default function FinancialPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <style jsx global>{`
+        @media print {
+          body.printing-financial-dashboard * {
+            visibility: hidden !important;
+          }
+
+          body.printing-financial-dashboard .print-dashboard-target,
+          body.printing-financial-dashboard .print-dashboard-target * {
+            visibility: visible !important;
+          }
+
+          body.printing-financial-dashboard .print-dashboard-target {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: #0f172a !important;
+            padding: 16px !important;
+          }
+
+          body.printing-financial-dashboard .print-dashboard-target [data-export-scroll='x'] {
+            overflow: visible !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
