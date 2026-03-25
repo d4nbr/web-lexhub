@@ -49,14 +49,14 @@ export function LoadingDashboard() {
                 cx="26"
                 cy="26"
                 r="21"
-                stroke="#2f9e95"
+                stroke="#38bdf8"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeDasharray="48 132"
                 className="animate-[ringDash_1.35s_ease-in-out_infinite]"
               />
             </svg>
-            <span className="pointer-events-none absolute inset-0 rounded-full bg-teal-400/20 blur-[8px] animate-pulse" />
+            <span className="pointer-events-none absolute inset-0 rounded-full bg-sky-500/20 blur-[8px] animate-pulse" />
           </div>
 
           <div className="flex-1 space-y-2">
@@ -64,7 +64,7 @@ export function LoadingDashboard() {
               {[0, 1, 2, 3, 4].map(i => (
                 <span
                   key={i}
-                  className="w-1.5 rounded-full bg-teal-400/90"
+                  className="w-1.5 rounded-full bg-cyan-400/90"
                   style={{
                     height: '100%',
                     animation: `waveBars 0.95s ease-in-out ${i * 0.12}s infinite`,
@@ -75,7 +75,7 @@ export function LoadingDashboard() {
 
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-[width] duration-500 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500 transition-[width] duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
