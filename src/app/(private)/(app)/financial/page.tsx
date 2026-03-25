@@ -925,16 +925,21 @@ export default function FinancialPage() {
           body.printing-financial-dashboard .financial-print-root {
             position: static !important;
             inset: auto !important;
-            background: #0f172a !important;
-            padding: 12px !important;
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
             overflow: visible !important;
             z-index: auto !important;
+            page-break-before: auto !important;
           }
 
           body.printing-financial-dashboard .financial-print-clone {
             width: 100% !important;
             max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
             break-inside: auto;
+            color: #111827 !important;
           }
 
           body.printing-financial-dashboard .financial-print-clone [data-export-block='true'] {
@@ -951,6 +956,21 @@ export default function FinancialPage() {
             width: 100% !important;
             min-width: 0 !important;
             max-width: 100% !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .recharts-text,
+          body.printing-financial-dashboard .financial-print-clone .recharts-cartesian-axis-tick-value,
+          body.printing-financial-dashboard .financial-print-clone .recharts-legend-item-text,
+          body.printing-financial-dashboard .financial-print-clone .recharts-label {
+            fill: #111827 !important;
+            color: #111827 !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .recharts-label-line,
+          body.printing-financial-dashboard .financial-print-clone path[stroke='#94a3b8'],
+          body.printing-financial-dashboard .financial-print-clone circle[fill='#94a3b8'] {
+            stroke: #374151 !important;
+            fill: #374151 !important;
           }
         }
       `}</style>
