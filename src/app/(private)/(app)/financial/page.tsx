@@ -203,30 +203,39 @@ export default function FinancialPage() {
     setIsExportingPdf(true)
 
     const exportNode = dashboardExportRef.current
-    const scrollNodes = Array.from(exportNode.querySelectorAll<HTMLElement>('[data-export-scroll="x"]'))
-    const originalOverflows = scrollNodes.map(node => ({
-      overflow: node.style.overflow,
-      overflowX: node.style.overflowX,
-    }))
 
     try {
-      scrollNodes.forEach(node => {
+      const printRoot = document.createElement('div')
+      printRoot.className = 'financial-print-root'
+
+      const clone = exportNode.cloneNode(true) as HTMLElement
+      clone.classList.add('financial-print-clone')
+
+      const cloneScrollNodes = Array.from(clone.querySelectorAll<HTMLElement>('[data-export-scroll="x"]'))
+      cloneScrollNodes.forEach(node => {
         node.style.overflow = 'visible'
         node.style.overflowX = 'visible'
+
+        const firstChild = node.firstElementChild as HTMLElement | null
+        if (firstChild) {
+          firstChild.style.minWidth = '0'
+          firstChild.style.width = `${Math.max(firstChild.scrollWidth, firstChild.clientWidth)}px`
+        }
       })
+
+      printRoot.appendChild(clone)
+      document.body.appendChild(printRoot)
 
       document.body.classList.add('printing-financial-dashboard')
       window.print()
       toast.success('Painel de impressão aberto. Escolha "Salvar como PDF".')
+
+      document.body.classList.remove('printing-financial-dashboard')
+      printRoot.remove()
     } catch (error) {
       console.error('Falha ao abrir impressão do dashboard financeiro:', error)
       toast.error('Falha ao abrir impressão. Tente novamente.')
     } finally {
-      document.body.classList.remove('printing-financial-dashboard')
-      scrollNodes.forEach((node, idx) => {
-        node.style.overflow = originalOverflows[idx]?.overflow ?? ''
-        node.style.overflowX = originalOverflows[idx]?.overflowX ?? ''
-      })
       setIsExportingPdf(false)
     }
   }
@@ -897,25 +906,36 @@ export default function FinancialPage() {
 
       <style jsx global>{`
         @media print {
+          @page {
+            size: A3 landscape;
+            margin: 10mm;
+          }
+
           body.printing-financial-dashboard * {
             visibility: hidden !important;
           }
 
-          body.printing-financial-dashboard .print-dashboard-target,
-          body.printing-financial-dashboard .print-dashboard-target * {
+          body.printing-financial-dashboard .financial-print-root,
+          body.printing-financial-dashboard .financial-print-root * {
             visibility: visible !important;
           }
 
-          body.printing-financial-dashboard .print-dashboard-target {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
+          body.printing-financial-dashboard .financial-print-root {
+            position: fixed !important;
+            inset: 0 !important;
             background: #0f172a !important;
-            padding: 16px !important;
+            padding: 12px !important;
+            overflow: visible !important;
+            z-index: 999999 !important;
           }
 
-          body.printing-financial-dashboard .print-dashboard-target [data-export-scroll='x'] {
+          body.printing-financial-dashboard .financial-print-clone {
+            width: 100% !important;
+            max-width: none !important;
+            break-inside: auto;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone [data-export-scroll='x'] {
             overflow: visible !important;
           }
         }
