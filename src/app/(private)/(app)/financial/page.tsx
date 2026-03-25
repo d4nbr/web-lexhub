@@ -623,8 +623,14 @@ export default function FinancialPage() {
                   <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalFiltrado}</p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
-                  <p className="text-xs text-slate-400">Universo único (100%)</p>
-                  <p className="text-xl font-semibold">{dashboardSummaryQuery.data.totalFiltrado}</p>
+                  <p className="text-xs text-slate-400">Data de Emissão</p>
+                  <p className="text-xl font-semibold">
+                    {new Date().toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </p>
                 </div>
                 <div className="rounded-lg border border-slate-700 p-3">
                   <p className="text-xs text-slate-400">Regra de cálculo</p>
