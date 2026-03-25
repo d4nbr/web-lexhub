@@ -254,6 +254,8 @@ export default function FinancialPage() {
   const seccionalChartWidth = Math.max(1200, seccionalData.length * 56)
   const seccionalBarSize = seccionalData.length > 16 ? 9 : seccionalData.length > 10 ? 12 : 18
 
+  const isSituacaoFinanceiraTodos = !applied?.sit_fin_atual
+
   const seccionalComparativoData = useMemo(
     () =>
       (dashboardSummaryQuery.data?.seccionalComparativo ?? []).map(item => ({
@@ -539,6 +541,12 @@ export default function FinancialPage() {
                   size="sm"
                   variant={chartVisibility.seccionalComparativo ? 'default' : 'outline'}
                   onClick={() => toggleChartVisibility('seccionalComparativo')}
+                  disabled={!isSituacaoFinanceiraTodos}
+                  title={
+                    !isSituacaoFinanceiraTodos
+                      ? 'Disponível apenas quando Situação Financeira = Todos'
+                      : undefined
+                  }
                 >
                   Adimpl x Inadimpl
                 </Button>
@@ -783,7 +791,7 @@ export default function FinancialPage() {
                 </div>
               )}
 
-              {chartVisibility.seccionalComparativo && (
+              {isSituacaoFinanceiraTodos && chartVisibility.seccionalComparativo && (
                 <div className="rounded-lg border border-slate-700 p-4 space-y-3" data-export-block="true">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-slate-200">Adimplentes x Inadimplentes por Seccional</h3>
