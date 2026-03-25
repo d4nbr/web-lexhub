@@ -237,7 +237,6 @@ export default function FinancialPage() {
 
       document.body.classList.add('printing-financial-dashboard')
       window.print()
-      toast.success('Painel de impressão aberto. Escolha "Salvar como PDF".')
 
       document.body.classList.remove('printing-financial-dashboard')
       printRoot.remove()
