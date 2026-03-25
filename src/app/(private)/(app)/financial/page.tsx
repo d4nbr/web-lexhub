@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Printer } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -563,7 +564,9 @@ export default function FinancialPage() {
                   variant="secondary"
                   disabled={isExportingPdf}
                   onClick={handleExportPdf}
+                  className="gap-2"
                 >
+                  <Printer className="h-4 w-4" />
                   {isExportingPdf ? 'Abrindo impressão...' : 'Imprimir / Salvar PDF'}
                 </Button>
               </div>
