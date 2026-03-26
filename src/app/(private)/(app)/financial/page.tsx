@@ -55,6 +55,8 @@ import {
 } from 'recharts'
 
 const DEFAULT_PAGE_SIZE = 50
+const FINANCIAL_UPLOAD_WEBHOOK_URL =
+  'https://n8n.iaoptimus.online/webhook/armazena-baseoab'
 
 const SUBSECAO_OPTIONS = [
   { value: 'ACAILANDIA', label: 'Açailândia' },
@@ -148,6 +150,8 @@ export default function FinancialPage() {
   const [applied, setApplied] = useState<FinancialLawyersFilters | null>(null)
   const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false)
   const [isUploadBaseModalOpen, setIsUploadBaseModalOpen] = useState(false)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [isUploadingBase, setIsUploadingBase] = useState(false)
   const [chartVisibility, setChartVisibility] = useState<DashboardChartVisibility>({
     situacao: true,
     sexo: true,
@@ -204,6 +208,37 @@ export default function FinancialPage() {
 
   function toggleChartVisibility(key: keyof DashboardChartVisibility) {
     setChartVisibility(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  async function handleUploadBaseFile() {
+    if (!uploadFile || isUploadingBase) {
+      return
+    }
+
+    setIsUploadingBase(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('data', uploadFile)
+
+      const response = await fetch(FINANCIAL_UPLOAD_WEBHOOK_URL, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Falha no envio (HTTP ${response.status})`)
+      }
+
+      toast.success('Base enviada com sucesso!')
+      setUploadFile(null)
+      setIsUploadBaseModalOpen(false)
+    } catch (error) {
+      console.error('Falha ao enviar arquivo para atualização da base:', error)
+      toast.error('Não foi possível enviar o arquivo. Tente novamente.')
+    } finally {
+      setIsUploadingBase(false)
+    }
   }
 
   function handleExportPdf() {
@@ -308,7 +343,10 @@ export default function FinancialPage() {
         <h1 className="text-3xl font-calsans font-bold tracking-tight">Financeiro</h1>
         <Button
           variant="secondary"
-          onClick={() => setIsUploadBaseModalOpen(true)}
+          onClick={() => {
+            setUploadFile(null)
+            setIsUploadBaseModalOpen(true)
+          }}
           className="gap-2"
         >
           <DatabaseBackup className="h-4 w-4" />
@@ -507,21 +545,38 @@ export default function FinancialPage() {
       )}
 
       <Dialog open={isUploadBaseModalOpen} onOpenChange={setIsUploadBaseModalOpen}>
-        <DialogContent className="!w-[96vw] !max-w-[1320px] h-[88vh] max-h-[88vh] border-slate-700 bg-slate-900 text-slate-100 p-0 overflow-hidden">
-          <DialogHeader className="px-4 py-3 border-b border-slate-700">
+        <DialogContent className="w-[95vw] max-w-[560px] border-slate-700 bg-slate-900 text-slate-100">
+          <DialogHeader>
             <DialogTitle>Atualizar Base</DialogTitle>
             <DialogDescription>
-              Atualização da base via webhook n8n incorporado.
+              Selecione um arquivo .xlsx/.xls para enviar ao fluxo financeiro no n8n.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="h-full w-full">
-            <iframe
-              title="Atualizar Base OAB"
-              src="https://n8n.iaoptimus.online/webhook/oabma/financeiro/upload-base"
-              className="h-[calc(88vh-84px)] w-full bg-white"
+          <div className="space-y-3">
+            <Input
+              type="file"
+              accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={event => {
+                const file = event.target.files?.[0] ?? null
+                setUploadFile(file)
+              }}
             />
+            {uploadFile && (
+              <p className="text-xs text-slate-400">
+                Arquivo selecionado: <span className="text-slate-200">{uploadFile.name}</span>
+              </p>
+            )}
           </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUploadBaseModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUploadBaseFile} disabled={!uploadFile || isUploadingBase}>
+              {isUploadingBase ? 'Enviando...' : 'Enviar arquivo'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
