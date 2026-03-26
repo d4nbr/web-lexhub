@@ -55,8 +55,7 @@ import {
 } from 'recharts'
 
 const DEFAULT_PAGE_SIZE = 50
-const FINANCIAL_UPLOAD_WEBHOOK_URL =
-  'https://n8n.iaoptimus.online/webhook/armazena-baseoab'
+const FINANCIAL_UPLOAD_WEBHOOK_URL = '/api/financial/upload-base'
 
 const SUBSECAO_OPTIONS = [
   { value: 'ACAILANDIA', label: 'Açailândia' },
