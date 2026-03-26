@@ -58,7 +58,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@biomejs/biome",
-      "sharp"
+      "sharp",
+      "ssh2",
+      "cpu-features"
     ]
   }
 }
