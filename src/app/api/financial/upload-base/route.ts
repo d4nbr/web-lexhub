@@ -22,9 +22,11 @@ export async function POST(request: Request) {
 
   try {
     const incomingFormData = await request.formData()
-    const file = incomingFormData.get('data')
+    const file = incomingFormData.get('data') as
+      | { name?: string; arrayBuffer?: () => Promise<ArrayBuffer> }
+      | null
 
-    if (!(file instanceof File)) {
+    if (!file || typeof file.arrayBuffer !== 'function' || !file.name) {
       return NextResponse.json(
         { message: 'Arquivo não recebido no campo "data".' },
         { status: 400 }
