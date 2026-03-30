@@ -57,6 +57,18 @@ import {
 const DEFAULT_PAGE_SIZE = 50
 const FINANCIAL_UPLOAD_WEBHOOK_URL = '/api/financial/upload-base'
 
+const SECCIONAL_EXTERNAL_LABELS = {
+  screenFontSize: 10,
+  pdfFontSize: 13,
+  pdfFontWeight: 600,
+} as const
+
+const SECCIONAL_COMPARATIVO_EXTERNAL_LABELS = {
+  screenFontSize: 10,
+  pdfFontSize: 13,
+  pdfFontWeight: 600,
+} as const
+
 const SUBSECAO_OPTIONS = [
   { value: 'ACAILANDIA', label: 'Açailândia' },
   { value: 'BACABAL', label: 'Bacabal' },
@@ -830,7 +842,7 @@ export default function FinancialPage() {
                   )}
 
                   {!!seccionalData.length && (
-                    <div className="overflow-x-auto pb-2" data-export-scroll="x">
+                    <div className="overflow-x-auto pb-2 seccional-chart-wrapper" data-export-scroll="x">
                       <div style={{ width: `${seccionalChartWidth}px` }} className="h-[340px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
@@ -879,7 +891,8 @@ export default function FinancialPage() {
                                 }
                                 position="top"
                                 fill="#e2e8f0"
-                                fontSize={9}
+                                fontSize={SECCIONAL_EXTERNAL_LABELS.screenFontSize}
+                                fontWeight={SECCIONAL_EXTERNAL_LABELS.pdfFontWeight}
                               />
                             </Bar>
                           </BarChart>
@@ -921,7 +934,7 @@ export default function FinancialPage() {
                   )}
 
                   {!!seccionalComparativoData.length && (
-                    <div className="overflow-x-auto pb-2" data-export-scroll="x">
+                    <div className="overflow-x-auto pb-2 seccional-comparativo-chart-wrapper" data-export-scroll="x">
                       <div style={{ width: `${seccionalComparativoWidth}px` }} className="h-[360px] min-w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={seccionalComparativoData} barGap={4} barCategoryGap="10%">
@@ -972,7 +985,8 @@ export default function FinancialPage() {
                                 }
                                 position="top"
                                 fill="#e2e8f0"
-                                fontSize={9}
+                                fontSize={SECCIONAL_COMPARATIVO_EXTERNAL_LABELS.screenFontSize}
+                                fontWeight={SECCIONAL_COMPARATIVO_EXTERNAL_LABELS.pdfFontWeight}
                                 offset={10}
                               />
                             </Bar>
@@ -991,7 +1005,8 @@ export default function FinancialPage() {
                                 }
                                 position="top"
                                 fill="#e2e8f0"
-                                fontSize={9}
+                                fontSize={SECCIONAL_COMPARATIVO_EXTERNAL_LABELS.screenFontSize}
+                                fontWeight={SECCIONAL_COMPARATIVO_EXTERNAL_LABELS.pdfFontWeight}
                                 offset={2}
                               />
                             </Bar>
@@ -1081,6 +1096,16 @@ export default function FinancialPage() {
 
           body.printing-financial-dashboard .financial-print-clone .pie-external-label-dot {
             r: 2.6 !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .seccional-chart-wrapper .recharts-label-list text {
+            font-size: ${SECCIONAL_EXTERNAL_LABELS.pdfFontSize}px !important;
+            font-weight: ${SECCIONAL_EXTERNAL_LABELS.pdfFontWeight} !important;
+          }
+
+          body.printing-financial-dashboard .financial-print-clone .seccional-comparativo-chart-wrapper .recharts-label-list text {
+            font-size: ${SECCIONAL_COMPARATIVO_EXTERNAL_LABELS.pdfFontSize}px !important;
+            font-weight: ${SECCIONAL_COMPARATIVO_EXTERNAL_LABELS.pdfFontWeight} !important;
           }
         }
       `}</style>
