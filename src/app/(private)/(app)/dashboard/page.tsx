@@ -204,6 +204,7 @@ export default function DashboardPage() {
           <ServicesTimeSeriesChart
             data={timeseriesQuery.data ?? []}
             isLoading={timeseriesQuery.isLoading}
+            showValueLabels
             title={month === 'all' ? 'Evolução no ano' : 'Evolução diária no mês'}
             xTickFormatter={value => {
               if (month === 'all') {
@@ -252,6 +253,7 @@ export default function DashboardPage() {
           <ServicesTimeSeriesChart
             data={timeseriesQuery.data ?? []}
             isLoading={timeseriesQuery.isLoading}
+            showValueLabels
             title={
               month === 'all'
                 ? agentId === 'all'

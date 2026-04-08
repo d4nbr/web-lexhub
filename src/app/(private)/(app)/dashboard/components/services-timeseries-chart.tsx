@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   CartesianGrid,
+  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -15,6 +16,7 @@ interface ServicesTimeSeriesChartProps {
   isLoading: boolean
   title?: string
   xTickFormatter?: (value: string) => string
+  showValueLabels?: boolean
 }
 
 export function ServicesTimeSeriesChart({
@@ -22,6 +24,7 @@ export function ServicesTimeSeriesChart({
   isLoading,
   title = 'Atendimentos por período',
   xTickFormatter,
+  showValueLabels = false,
 }: ServicesTimeSeriesChartProps) {
   return (
     <Card className="rounded-2xl bg-slate-800/60 border border-slate-700">
@@ -50,7 +53,17 @@ export function ServicesTimeSeriesChart({
                 }
               />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-              <Line type="monotone" dataKey="totalServices" stroke="#0ea5e9" strokeWidth={2} />
+              <Line type="monotone" dataKey="totalServices" stroke="#0ea5e9" strokeWidth={2}>
+                {showValueLabels && (
+                  <LabelList
+                    dataKey="totalServices"
+                    position="top"
+                    offset={10}
+                    className="fill-slate-200"
+                    fontSize={11}
+                  />
+                )}
+              </Line>
             </LineChart>
           </ResponsiveContainer>
         )}
