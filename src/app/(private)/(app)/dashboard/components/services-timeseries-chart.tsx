@@ -40,7 +40,7 @@ export function ServicesTimeSeriesChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
+            <LineChart data={data} margin={{ top: showValueLabels ? 26 : 8, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} className="stroke-slate-700" />
               <XAxis
                 dataKey="date"
@@ -52,13 +52,18 @@ export function ServicesTimeSeriesChart({
                   xTickFormatter ? xTickFormatter(String(value)) : String(value)
                 }
               />
-              <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+              <YAxis
+                allowDecimals={false}
+                tickLine={false}
+                axisLine={false}
+                domain={showValueLabels ? [0, (dataMax: number) => Math.max(dataMax + 1, 1)] : [0, 'auto']}
+              />
               <Line type="monotone" dataKey="totalServices" stroke="#0ea5e9" strokeWidth={2}>
                 {showValueLabels && (
                   <LabelList
                     dataKey="totalServices"
                     position="top"
-                    offset={10}
+                    offset={8}
                     className="fill-slate-200"
                     fontSize={11}
                   />
