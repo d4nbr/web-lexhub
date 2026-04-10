@@ -17,6 +17,7 @@ interface ServicesTimeSeriesChartProps {
   title?: string
   xTickFormatter?: (value: string) => string
   showValueLabels?: boolean
+  valueLabelFormatter?: (value: number) => string
 }
 
 export function ServicesTimeSeriesChart({
@@ -25,6 +26,7 @@ export function ServicesTimeSeriesChart({
   title = 'Atendimentos por período',
   xTickFormatter,
   showValueLabels = false,
+  valueLabelFormatter,
 }: ServicesTimeSeriesChartProps) {
   return (
     <Card className="rounded-2xl bg-slate-800/60 border border-slate-700">
@@ -40,7 +42,7 @@ export function ServicesTimeSeriesChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: showValueLabels ? 26 : 8, right: 12, left: 0, bottom: 0 }}>
+            <LineChart data={data} margin={{ top: showValueLabels ? 34 : 8, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} className="stroke-slate-700" />
               <XAxis
                 dataKey="date"
@@ -63,9 +65,14 @@ export function ServicesTimeSeriesChart({
                   <LabelList
                     dataKey="totalServices"
                     position="top"
-                    offset={8}
+                    offset={10}
                     className="fill-slate-200"
                     fontSize={11}
+                    formatter={(value: number) =>
+                      valueLabelFormatter
+                        ? valueLabelFormatter(Number(value))
+                        : String(value)
+                    }
                   />
                 )}
               </Line>
