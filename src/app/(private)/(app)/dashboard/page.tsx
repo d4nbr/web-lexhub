@@ -307,7 +307,7 @@ export default function DashboardPage() {
             isLoading={timeseriesQuery.isLoading}
             title="Comparativo diário"
             showValueLabels
-            valueLabelFormatter={value => `(${value})`}
+            valueLabelFormatter={value => String(value)}
             xTickFormatter={value => {
               const parts = value.split('-')
               if (parts.length === 3) {
@@ -322,7 +322,7 @@ export default function DashboardPage() {
             isLoading={monthlyTimeseriesQuery.isLoading}
             title="Comparativo mensal"
             showValueLabels
-            valueLabelFormatter={value => `(${value})`}
+            valueLabelFormatter={value => String(value)}
           />
         </div>
       )}
