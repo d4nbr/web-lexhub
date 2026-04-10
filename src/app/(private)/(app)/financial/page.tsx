@@ -12,7 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Printer, DatabaseBackup } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
+import { Printer, DatabaseBackup, Check, ChevronsUpDown } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -93,7 +99,8 @@ const SUBSECAO_OPTIONS = [
   { value: 'TIMON', label: 'Timon' },
 ]
 
-interface FinancialDraftFilters extends FinancialLawyersFilters {
+interface FinancialDraftFilters extends Omit<FinancialLawyersFilters, 'subsecao'> {
+  subsecao?: string[]
   tipo_inscricao?: 'all' | 'originaria' | 'suplementar'
 }
 
@@ -174,7 +181,16 @@ export default function FinancialPage() {
   const [seccionalLabelMode, setSeccionalLabelMode] = useState<BarLabelMode>('absolute')
   const [seccionalComparativoLabelMode, setSeccionalComparativoLabelMode] = useState<BarLabelMode>('absolute')
   const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const [isSeccionalPopoverOpen, setIsSeccionalPopoverOpen] = useState(false)
   const dashboardExportRef = useRef<HTMLDivElement | null>(null)
+
+  const selectedSeccionais = draft.subsecao ?? []
+  const selectedSeccionalLabel =
+    selectedSeccionais.length === 0
+      ? 'Todos'
+      : selectedSeccionais.length === 1
+        ? SUBSECAO_OPTIONS.find(option => option.value === selectedSeccionais[0])?.label ?? selectedSeccionais[0]
+        : `${selectedSeccionais.length} selecionadas`
 
   const lawyersQuery = useQuery({
     queryKey: ['financial', 'lawyers', applied],
@@ -203,13 +219,33 @@ export default function FinancialPage() {
 
     setApplied({
       ...rest,
+      subsecao: draft.subsecao?.length ? draft.subsecao : undefined,
       suplementar: normalizedSuplementar,
       page: 1,
     })
   }
 
-  function updateDraft(field: keyof FinancialDraftFilters, value?: string | number) {
+  function updateDraft(
+    field: keyof FinancialDraftFilters,
+    value?: string | number | string[]
+  ) {
     setDraft(prev => ({ ...prev, [field]: value }))
+  }
+
+  function toggleSeccional(value: string) {
+    setDraft(prev => {
+      const current = prev.subsecao ?? []
+      const next = current.includes(value)
+        ? current.filter(item => item !== value)
+        : [...current, value]
+
+      return { ...prev, subsecao: next }
+    })
+  }
+
+  function selectAllSeccionais() {
+    setDraft(prev => ({ ...prev, subsecao: [] }))
+    setIsSeccionalPopoverOpen(false)
   }
 
   function handlePageChange(page: number) {
@@ -421,22 +457,47 @@ export default function FinancialPage() {
 
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Seccional</p>
-            <Select
-              value={draft.subsecao || 'all'}
-              onValueChange={value => updateDraft('subsecao', value === 'all' ? '' : value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seccional" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {SUBSECAO_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={isSeccionalPopoverOpen} onOpenChange={setIsSeccionalPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                >
+                  <span className="truncate">{selectedSeccionalLabel}</span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-70" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] border-slate-700 bg-slate-950 p-1 text-slate-100">
+                <button
+                  type="button"
+                  onClick={selectAllSeccionais}
+                  className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-slate-800"
+                >
+                  <Check className={cn('mr-2 h-4 w-4', selectedSeccionais.length === 0 ? 'opacity-100' : 'opacity-0')} />
+                  Todos
+                </button>
+                <div className="my-1 h-px bg-slate-800" />
+                <div className="max-h-64 overflow-y-auto">
+                  {SUBSECAO_OPTIONS.map(option => {
+                    const isSelected = selectedSeccionais.includes(option.value)
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => toggleSeccional(option.value)}
+                        className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-slate-800"
+                      >
+                        <Check className={cn('mr-2 h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')} />
+                        {option.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-1">

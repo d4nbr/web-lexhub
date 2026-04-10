@@ -30,7 +30,7 @@ export interface FinancialLawyersFilters {
   sexo?: string
   pcd?: string
   uf_res?: string
-  subsecao?: string
+  subsecao?: string | string[]
   suplementar?: string
 }
 
@@ -45,6 +45,15 @@ export async function getFinancialLawyers(filters: FinancialLawyersFilters) {
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value === undefined || value === null) return
+
+    if (Array.isArray(value)) {
+      value
+        .map(item => String(item).trim())
+        .filter(Boolean)
+        .forEach(item => params.append(key, item))
+      return
+    }
+
     const asString = String(value).trim()
     if (!asString) return
     params.set(key, asString)
