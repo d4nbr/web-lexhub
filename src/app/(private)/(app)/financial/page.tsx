@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,7 @@ import {
   getFinancialDashboard,
   type FinancialDashboardResponse,
 } from '@/api/financial/get-financial-dashboard'
+import { getProfile } from '@/api/agents/get-profile'
 import { LoadingDashboard } from './components/loading-dashboard'
 import { toast } from 'sonner'
 import {
@@ -192,6 +193,17 @@ export default function FinancialPage() {
         ? SUBSECAO_OPTIONS.find(option => option.value === selectedSeccionais[0])?.label ?? selectedSeccionais[0]
         : `${selectedSeccionais.length} selecionadas`
 
+  const profileQuery = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfile,
+    staleTime: Number.POSITIVE_INFINITY,
+  })
+
+  const scopedSubsecao =
+    profileQuery.data?.agent.role === 'SUBSECTION'
+      ? profileQuery.data.agent.subsecaoScope
+      : null
+
   const lawyersQuery = useQuery({
     queryKey: ['financial', 'lawyers', applied],
     queryFn: () => getFinancialLawyers(applied ?? {}),
@@ -207,6 +219,15 @@ export default function FinancialPage() {
     enabled: isDashboardModalOpen && applied !== null,
   })
 
+  useEffect(() => {
+    if (!scopedSubsecao) return
+
+    setDraft(prev => ({
+      ...prev,
+      subsecao: [scopedSubsecao],
+    }))
+  }, [scopedSubsecao])
+
   function handleSearch() {
     const normalizedSuplementar =
       draft.tipo_inscricao === 'suplementar'
@@ -219,7 +240,11 @@ export default function FinancialPage() {
 
     setApplied({
       ...rest,
-      subsecao: draft.subsecao?.length ? draft.subsecao : undefined,
+      subsecao: scopedSubsecao
+        ? [scopedSubsecao]
+        : draft.subsecao?.length
+          ? draft.subsecao
+          : undefined,
       suplementar: normalizedSuplementar,
       page: 1,
     })
@@ -233,6 +258,8 @@ export default function FinancialPage() {
   }
 
   function toggleSeccional(value: string) {
+    if (scopedSubsecao) return
+
     setDraft(prev => {
       const current = prev.subsecao ?? []
       const next = current.includes(value)
@@ -244,6 +271,8 @@ export default function FinancialPage() {
   }
 
   function selectAllSeccionais() {
+    if (scopedSubsecao) return
+
     setDraft(prev => ({ ...prev, subsecao: [] }))
     setIsSeccionalPopoverOpen(false)
   }
@@ -457,12 +486,24 @@ export default function FinancialPage() {
 
           <div className="space-y-2">
             <p className="text-xs text-slate-400">Seccional</p>
-            <Popover open={isSeccionalPopoverOpen} onOpenChange={setIsSeccionalPopoverOpen}>
+            {scopedSubsecao && (
+              <p className="text-[11px] text-amber-300">
+                Acesso restrito à seccional {scopedSubsecao}
+              </p>
+            )}
+            <Popover
+              open={isSeccionalPopoverOpen}
+              onOpenChange={open => {
+                if (scopedSubsecao) return
+                setIsSeccionalPopoverOpen(open)
+              }}
+            >
               <PopoverTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
                   role="combobox"
+                  disabled={!!scopedSubsecao}
                   className="w-full justify-between border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
                 >
                   <span className="truncate">{selectedSeccionalLabel}</span>

@@ -98,7 +98,7 @@ export function AgentTableFilters() {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="h-8 w-40 rounded">
-                    <SelectValue placeholder="Cargo" />
+                    <SelectValue placeholder="Perfil" />
                   </SelectTrigger>
                 </FormControl>
 
@@ -106,6 +106,7 @@ export function AgentTableFilters() {
                   <SelectItem value="ALL">Todos</SelectItem>
                   <SelectItem value="ADMIN">Administrador</SelectItem>
                   <SelectItem value="MEMBER">Membro</SelectItem>
+                  <SelectItem value="SUBSECTION">Subseção</SelectItem>
                 </SelectContent>
               </Select>
             </FormItem>

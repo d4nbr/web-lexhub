@@ -11,7 +11,11 @@ interface GetAllProps {
     id: string
     name: string
     email: string
-    role: 'ADMIN' | 'MEMBER'
+    role: 'ADMIN' | 'MEMBER' | 'SUBSECTION'
+    canAccessDashboard: boolean
+    canAccessServices: boolean
+    canAccessFinancial: boolean
+    subsecaoScope: string | null
     inactive: string | null
   }[]
   total: number

@@ -63,7 +63,8 @@ export function AgentsList() {
               <TableHead className="w-1" />
               <TableHead>Nome do Funcionário</TableHead>
               <TableHead>E-mail cadastrado</TableHead>
-              <TableHead className="w-52 text-center">Cargo</TableHead>
+              <TableHead className="w-52 text-center">Perfil</TableHead>
+              <TableHead className="w-64">Acessos</TableHead>
               <TableHead className="w-56 text-center">Situação</TableHead>
               <TableHead className="w-32" />
             </TableRow>

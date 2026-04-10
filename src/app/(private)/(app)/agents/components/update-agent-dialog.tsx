@@ -35,13 +35,28 @@ import { LoaderCircle, Save } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { SUBSECAO_OPTIONS } from './subsecao-options'
 
-const UpdateAgentFormSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1, 'O nome é obrigatório.'),
-  email: z.string().email('Insira um endereço de e-mail válido.'),
-  role: z.enum(['ADMIN', 'MEMBER']),
-})
+const UpdateAgentFormSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string().min(1, 'O nome é obrigatório.'),
+    email: z.string().email('Insira um endereço de e-mail válido.'),
+    role: z.enum(['ADMIN', 'MEMBER', 'SUBSECTION']),
+    canAccessDashboard: z.boolean(),
+    canAccessServices: z.boolean(),
+    canAccessFinancial: z.boolean(),
+    subsecaoScope: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === 'SUBSECTION' && !data.subsecaoScope) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Selecione a seccional para o perfil Subseção.',
+        path: ['subsecaoScope'],
+      })
+    }
+  })
 
 type UpdateAgentFormType = z.infer<typeof UpdateAgentFormSchema>
 
@@ -50,7 +65,11 @@ interface UpdateAgentProps {
     id: string
     name: string
     email: string
-    role: 'ADMIN' | 'MEMBER'
+    role: 'ADMIN' | 'MEMBER' | 'SUBSECTION'
+    canAccessDashboard: boolean
+    canAccessServices: boolean
+    canAccessFinancial: boolean
+    subsecaoScope: string | null
   }
   onOpenChange: (open: boolean) => void
 }
@@ -63,10 +82,13 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
       name: agents.name,
       email: agents.email,
       role: agents.role,
+      canAccessDashboard: agents.canAccessDashboard,
+      canAccessServices: agents.canAccessServices,
+      canAccessFinancial: agents.canAccessFinancial,
+      subsecaoScope: agents.subsecaoScope ?? '',
     },
   })
 
-  // FIXME: Mutation para atualizar um funcionário
   const queryClient = useQueryClient()
   const { mutateAsync: updateAgentFn, isPending: isLoadindUpdate } =
     useMutation({
@@ -76,6 +98,8 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
       },
     })
 
+  const selectedRole = form.watch('role')
+
   async function handleUpdateAgent(data: UpdateAgentFormType) {
     try {
       await updateAgentFn({
@@ -83,32 +107,31 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
         name: data.name,
         email: data.email,
         role: data.role,
+        canAccessDashboard: data.role === 'ADMIN' ? true : data.canAccessDashboard,
+        canAccessServices: data.role === 'ADMIN' ? true : data.canAccessServices,
+        canAccessFinancial: data.role === 'ADMIN' ? true : data.canAccessFinancial,
+        subsecaoScope: data.role === 'SUBSECTION' ? data.subsecaoScope : null,
       })
 
-      // Fechar o Dialog quando o funcionário for atualizado
       onOpenChange(false)
 
-      toast.success('Funcionário atualizado com sucesso!', {
-        description:
-          'Confira as informações do colaborador na lista de funcionários.',
+      toast.success('Usuário atualizado com sucesso!', {
+        description: 'Confira as informações na lista de usuários.',
       })
     } catch (err) {
-      // FIXME: Tratar erros vindo da API
       form.reset()
 
       if (isAxiosError(err)) {
-        toast.error('Houve um erro ao atualizar o funcionário!', {
+        toast.error('Houve um erro ao atualizar o usuário!', {
           description: err.response?.data.message,
         })
 
         return
       }
 
-      toast.error('Houve um erro ao atualizar o funcionário!', {
+      toast.error('Houve um erro ao atualizar o usuário!', {
         description: 'Por favor, tente novamente.',
       })
-
-      console.log(err)
     }
   }
 
@@ -116,10 +139,10 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
     <DialogContent className="w-[90%] rounded">
       <DialogHeader>
         <DialogTitle className="font-calsans text-2xl">
-          Editar Informações do Funcionário
+          Editar Informações do Usuário
         </DialogTitle>
         <DialogDescription>
-          Altere os dados do funcionário conforme necessário.
+          Altere os dados e permissões conforme necessário.
         </DialogDescription>
       </DialogHeader>
 
@@ -145,7 +168,7 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
                       </FormMessage>
                     ) : (
                       <FormDescription className="text-muted-foreground text-xs">
-                        Por favor, insira o nome completo do funcionário
+                        Por favor, insira o nome completo do usuário.
                       </FormDescription>
                     )}
                   </FormItem>
@@ -168,7 +191,7 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
                       </FormMessage>
                     ) : (
                       <FormDescription className="text-muted-foreground text-xs">
-                        Insira o novo endereço de e-mail do funcionário
+                        Insira o novo endereço de e-mail do usuário.
                       </FormDescription>
                     )}
                   </FormItem>
@@ -180,7 +203,7 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cargo Atual</FormLabel>
+                    <FormLabel>Perfil</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="rounded">
@@ -188,18 +211,97 @@ export function UpdateAgentDialog({ agents, onOpenChange }: UpdateAgentProps) {
                         </SelectTrigger>
                       </FormControl>
 
-                      <SelectContent
-                        defaultValue={field.value}
-                        className="rounded"
-                      >
+                      <SelectContent className="rounded">
                         <SelectItem value="ADMIN">Administrador</SelectItem>
                         <SelectItem value="MEMBER">Membro</SelectItem>
+                        <SelectItem value="SUBSECTION">Subseção</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {selectedRole === 'SUBSECTION' && (
+                <FormField
+                  control={form.control}
+                  name="subsecaoScope"
+                  render={({ field, formState: { errors } }) => (
+                    <FormItem>
+                      <FormLabel>Seccional/Subseção vinculada</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="rounded">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded">
+                          {SUBSECAO_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.subsecaoScope && (
+                        <FormMessage className="text-red-500 text-xs">
+                          {errors.subsecaoScope.message}
+                        </FormMessage>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {selectedRole !== 'ADMIN' && (
+                <div className="space-y-2 rounded border border-slate-700 p-3">
+                  <p className="text-sm font-medium">Menus liberados</p>
+
+                  <FormField
+                    control={form.control}
+                    name="canAccessDashboard"
+                    render={({ field }) => (
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={event => field.onChange(event.target.checked)}
+                        />
+                        Dashboard
+                      </label>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="canAccessServices"
+                    render={({ field }) => (
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={event => field.onChange(event.target.checked)}
+                        />
+                        Atendimentos
+                      </label>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="canAccessFinancial"
+                    render={({ field }) => (
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={event => field.onChange(event.target.checked)}
+                        />
+                        Financeiro
+                      </label>
+                    )}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

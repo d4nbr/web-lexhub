@@ -3,37 +3,57 @@ import { cookies } from 'next/headers'
 
 interface JWTTokenProps {
   sub: string
-  role: 'ADMIN' | 'MEMBER'
+  role: 'ADMIN' | 'MEMBER' | 'SUBSECTION'
+  canAccessDashboard?: boolean
+  canAccessServices?: boolean
+  canAccessFinancial?: boolean
+  subsecaoScope?: string | null
+}
+
+export async function getAuthTokenPayload() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('@lexhub-auth')?.value
+
+  if (!token) return null
+
+  return jwtDecode<JWTTokenProps>(String(token))
 }
 
 export async function checkAdminStatus() {
-  const cookieStore = await cookies()
+  const payload = await getAuthTokenPayload()
+  return payload?.role === 'ADMIN'
+}
 
-  const token = cookieStore.get('@lexhub-auth')?.value
+export async function getMenuPermissions() {
+  const payload = await getAuthTokenPayload()
 
-  if (!token) {
-    return false
+  if (!payload) {
+    return {
+      canAccessDashboard: false,
+      canAccessServices: false,
+      canAccessFinancial: false,
+      role: null,
+    }
   }
 
-  const decodedToken: JWTTokenProps = jwtDecode(String(token))
+  if (payload.role === 'ADMIN') {
+    return {
+      canAccessDashboard: true,
+      canAccessServices: true,
+      canAccessFinancial: true,
+      role: payload.role,
+    }
+  }
 
-  const role = decodedToken.role
-
-  return role === 'ADMIN'
+  return {
+    canAccessDashboard: payload.canAccessDashboard ?? false,
+    canAccessServices: payload.canAccessServices ?? false,
+    canAccessFinancial: payload.canAccessFinancial ?? false,
+    role: payload.role,
+  }
 }
 
 export async function getIsAgentAuthenticated() {
-  const cookieStore = await cookies()
-
-  const token = cookieStore.get('@lexhub-auth')?.value
-
-  if (!token) {
-    return false
-  }
-
-  const decodedToken: JWTTokenProps = jwtDecode(String(token))
-
-  const { sub } = decodedToken
-
-  return sub
+  const payload = await getAuthTokenPayload()
+  return payload?.sub ?? false
 }

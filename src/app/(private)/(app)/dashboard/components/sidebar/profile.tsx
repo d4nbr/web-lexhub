@@ -59,9 +59,10 @@ export function Profile({ collapsed = false }: ProfileProps) {
     }
   }
 
-  function getRoleLabel(role: 'ADMIN' | 'MEMBER' | undefined) {
-    if (role === 'ADMIN') return 'Cargo: Administrador'
-    if (role === 'MEMBER') return 'Cargo: Membro'
+  function getRoleLabel(role: 'ADMIN' | 'MEMBER' | 'SUBSECTION' | undefined) {
+    if (role === 'ADMIN') return 'Perfil: Administrador'
+    if (role === 'MEMBER') return 'Perfil: Membro'
+    if (role === 'SUBSECTION') return 'Perfil: Subseção'
   }
 
   return (

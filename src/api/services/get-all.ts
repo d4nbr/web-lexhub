@@ -27,7 +27,7 @@ interface GetAllServicesProps {
       id: string
       name: string
       email: string
-      role: 'ADMIN' | 'MEMBER'
+      role: 'ADMIN' | 'MEMBER' | 'SUBSECTION'
     }
     serviceTypes: {
       serviceType: {

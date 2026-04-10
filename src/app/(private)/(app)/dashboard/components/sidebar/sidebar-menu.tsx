@@ -19,10 +19,15 @@ import { NavItem } from './nav-item'
 import { Profile } from './profile'
 
 interface SidebarMenuProps {
-  hasPrivilegedAccess: boolean
+  permissions: {
+    canAccessDashboard: boolean
+    canAccessServices: boolean
+    canAccessFinancial: boolean
+    role: 'ADMIN' | 'MEMBER' | 'SUBSECTION' | null
+  }
 }
 
-export function SidebarMenu({ hasPrivilegedAccess }: SidebarMenuProps) {
+export function SidebarMenu({ permissions }: SidebarMenuProps) {
   const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
@@ -43,6 +48,8 @@ export function SidebarMenu({ hasPrivilegedAccess }: SidebarMenuProps) {
       return next
     })
   }
+
+  const isAdmin = permissions.role === 'ADMIN'
 
   return (
     <aside
@@ -76,19 +83,27 @@ export function SidebarMenu({ hasPrivilegedAccess }: SidebarMenuProps) {
       <Separator orientation="horizontal" />
 
       <nav className="space-y-0.5 w-full">
-        <NavItem title="Dashboard" icon={Monitor} route="/dashboard" collapsed={collapsed} />
-        <NavItem title="Atendimentos" icon={ClipboardList} route="/services" collapsed={collapsed} />
+        {permissions.canAccessDashboard && (
+          <NavItem title="Dashboard" icon={Monitor} route="/dashboard" collapsed={collapsed} />
+        )}
 
-        {hasPrivilegedAccess && (
+        {permissions.canAccessServices && (
+          <NavItem title="Atendimentos" icon={ClipboardList} route="/services" collapsed={collapsed} />
+        )}
+
+        {permissions.canAccessFinancial && (
+          <NavItem title="Financeiro" icon={Wallet} route="/financial" collapsed={collapsed} />
+        )}
+
+        {isAdmin && (
           <>
-            <NavItem title="Financeiro" icon={Wallet} route="/financial" collapsed={collapsed} />
             <NavItem
               title="Controle de Serviços"
               icon={Bolt}
               route="/services-types"
               collapsed={collapsed}
             />
-            <NavItem title="Funcionários" icon={Users} route="/agents" collapsed={collapsed} />
+            <NavItem title="Gestão de Usuários" icon={Users} route="/agents" collapsed={collapsed} />
           </>
         )}
       </nav>

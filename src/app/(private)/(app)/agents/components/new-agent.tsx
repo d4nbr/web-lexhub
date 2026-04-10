@@ -15,8 +15,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -32,30 +38,49 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { SUBSECAO_OPTIONS } from './subsecao-options'
 
-const NewAgentFormSchema = z.object({
-  name: z.string().min(1, 'O nome é obrigatório.'),
-  email: z.string().email('Insira um endereço de e-mail válido.'),
-  password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
-})
+const NewAgentFormSchema = z
+  .object({
+    name: z.string().min(1, 'O nome é obrigatório.'),
+    email: z.string().email('Insira um endereço de e-mail válido.'),
+    password: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres.'),
+    role: z.enum(['ADMIN', 'MEMBER', 'SUBSECTION']),
+    canAccessDashboard: z.boolean(),
+    canAccessServices: z.boolean(),
+    canAccessFinancial: z.boolean(),
+    subsecaoScope: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === 'SUBSECTION' && !data.subsecaoScope) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Selecione a seccional para o perfil Subseção.',
+        path: ['subsecaoScope'],
+      })
+    }
+  })
 
 type NewAgentFormType = z.infer<typeof NewAgentFormSchema>
 
 export function NewAgent() {
-  // FIXME: Guardará o estado do Sheet se ele estiver aberto ou fechado
   const [sheetIsOpen, setSheetIsOpen] = useState(false)
 
   const form = useForm<NewAgentFormType>({
-    shouldUnregister: true, // Desregistrar o campo do formulário
+    shouldUnregister: true,
     resolver: zodResolver(NewAgentFormSchema),
     defaultValues: {
       name: '',
       email: '',
       password: '@102030@',
+      role: 'MEMBER',
+      canAccessDashboard: true,
+      canAccessServices: true,
+      canAccessFinancial: false,
+      subsecaoScope: '',
     },
   })
 
-  // FIXME: Mutation para criar um novo funcionário
   const queryClient = useQueryClient()
   const { mutateAsync: createAgentFn, isPending: isCreating } = useMutation({
     mutationFn: createAgent,
@@ -64,38 +89,42 @@ export function NewAgent() {
     },
   })
 
+  const selectedRole = form.watch('role')
+
   async function handleNewAgent(data: NewAgentFormType) {
+    const isAdmin = data.role === 'ADMIN'
+
     try {
       await createAgentFn({
         name: data.name,
         email: data.email,
         password: data.password,
+        role: data.role,
+        canAccessDashboard: isAdmin ? true : data.canAccessDashboard,
+        canAccessServices: isAdmin ? true : data.canAccessServices,
+        canAccessFinancial: isAdmin ? true : data.canAccessFinancial,
+        subsecaoScope: data.role === 'SUBSECTION' ? data.subsecaoScope : null,
       })
 
-      // Fechar o Sheet quando o funcionário for registrado
       setSheetIsOpen(false)
 
-      toast.success('Funcionário registrado com sucesso!', {
-        description:
-          'Confira as informações do colaborador na lista de funcionários.',
+      toast.success('Usuário registrado com sucesso!', {
+        description: 'Confira as informações do usuário na lista.',
       })
     } catch (err) {
-      // FIXME: Tratar erros vindo da API
       form.reset()
 
       if (isAxiosError(err)) {
-        toast.error('Houve um erro ao registrar o funcionário!', {
+        toast.error('Houve um erro ao registrar o usuário!', {
           description: err.response?.data.message,
         })
 
         return
       }
 
-      toast.error('Houve um erro ao registrar o funcionário!', {
+      toast.error('Houve um erro ao registrar o usuário!', {
         description: 'Por favor, tente novamente.',
       })
-
-      console.log(err)
     }
   }
 
@@ -104,17 +133,15 @@ export function NewAgent() {
       <SheetTrigger asChild>
         <Button className="bg-sky-700 flex items-center cursor-pointer rounded text-white hover:bg-sky-600">
           <CirclePlus className="size-5" />
-          Novo Funcionário
+          Novo Usuário
         </Button>
       </SheetTrigger>
 
       <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto px-4 w-full">
         <SheetHeader className="mt-2">
-          <SheetTitle className="font-calsans text-2xl">
-            Novo Funcionário
-          </SheetTitle>
+          <SheetTitle className="font-calsans text-2xl">Novo Usuário</SheetTitle>
           <SheetDescription className="text-muted-foreground">
-            Preencha as informações para registrar um novo funcionário
+            Preencha as informações para registrar um novo usuário
           </SheetDescription>
         </SheetHeader>
 
@@ -141,7 +168,7 @@ export function NewAgent() {
                     </FormMessage>
                   ) : (
                     <FormDescription className="text-muted-foreground text-xs">
-                      Por favor, insira o nome completo do funcionário
+                      Por favor, insira o nome completo do usuário.
                     </FormDescription>
                   )}
                 </FormItem>
@@ -164,7 +191,7 @@ export function NewAgent() {
                     </FormMessage>
                   ) : (
                     <FormDescription className="text-muted-foreground text-xs">
-                      Por favor, insira o e-mail do funcionário validado
+                      Informe o e-mail usado para login.
                     </FormDescription>
                   )}
                 </FormItem>
@@ -193,6 +220,111 @@ export function NewAgent() {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Perfil de acesso</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="rounded">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+
+                    <SelectContent className="rounded">
+                      <SelectItem value="ADMIN">Administrador</SelectItem>
+                      <SelectItem value="MEMBER">Membro</SelectItem>
+                      <SelectItem value="SUBSECTION">Subseção</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            {selectedRole === 'SUBSECTION' && (
+              <FormField
+                control={form.control}
+                name="subsecaoScope"
+                render={({ field, formState: { errors } }) => (
+                  <FormItem>
+                    <FormLabel>Seccional/Subseção vinculada</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="rounded">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded">
+                        {SUBSECAO_OPTIONS.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.subsecaoScope && (
+                      <FormMessage className="text-red-500 text-xs">
+                        {errors.subsecaoScope.message}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {selectedRole !== 'ADMIN' && (
+              <div className="space-y-3 rounded border border-slate-700 p-3">
+                <p className="text-sm font-medium">Menus liberados</p>
+
+                <FormField
+                  control={form.control}
+                  name="canAccessDashboard"
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={event => field.onChange(event.target.checked)}
+                      />
+                      Dashboard
+                    </label>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="canAccessServices"
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={event => field.onChange(event.target.checked)}
+                      />
+                      Atendimentos
+                    </label>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="canAccessFinancial"
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={event => field.onChange(event.target.checked)}
+                      />
+                      Financeiro
+                    </label>
+                  )}
+                />
+              </div>
+            )}
 
             <SheetFooter className="flex items-center justify-end mt-8 flex-row gap-2 p-0">
               <Button

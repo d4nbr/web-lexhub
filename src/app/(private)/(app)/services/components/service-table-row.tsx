@@ -32,7 +32,7 @@ interface ServiceTableRowProps {
       id: string
       name: string
       email: string
-      role: 'ADMIN' | 'MEMBER'
+      role: 'ADMIN' | 'MEMBER' | 'SUBSECTION'
     }
     serviceTypes: {
       serviceType: {
