@@ -402,9 +402,9 @@ export default function FinancialPage() {
       </div>
       <Separator orientation="horizontal" />
 
-      <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-slate-200 space-y-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <div className="space-y-1">
+      <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-slate-200 space-y-6">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-5">
+          <div className="space-y-2">
             <p className="text-xs text-slate-400">Situação Financeira</p>
             <Select
               value={draft.sit_fin_atual || 'all'}
@@ -421,7 +421,7 @@ export default function FinancialPage() {
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="text-xs text-slate-400">Tipo Inscrição</p>
             <Select
               value={draft.tipo_inscricao || 'all'}
@@ -438,7 +438,7 @@ export default function FinancialPage() {
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="text-xs text-slate-400">Sexo</p>
             <Select
               value={draft.sexo || 'all'}
@@ -455,7 +455,7 @@ export default function FinancialPage() {
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="text-xs text-slate-400">Seccional</p>
             <Popover open={isSeccionalPopoverOpen} onOpenChange={setIsSeccionalPopoverOpen}>
               <PopoverTrigger asChild>
@@ -500,7 +500,7 @@ export default function FinancialPage() {
             </Popover>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="text-xs text-slate-400">PCD</p>
             <Select
               value={draft.pcd || 'all'}
@@ -518,7 +518,7 @@ export default function FinancialPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3 pt-1">
           <Button onClick={handleSearch}>Buscar / Listar</Button>
 
           <Button
